@@ -1,0 +1,82 @@
+DROP DATABASE IF EXISTS Senior_Project;
+CREATE DATABASE Senior_Project;
+
+DROP TABLE IF EXISTS User_data;
+CREATE TABLE User_data (
+    user_id          VARCHAR(100)     UNIQUE      PRIMARY KEY,
+	full_name        VARCHAR(150)     NOT NULL,
+    email            VARCHAR(150)     UNIQUE,
+    username         VARCHAR(100)     NOT NULL    UNIQUE,
+    pssword          VARCHAR(205),
+    date_created     TIMESTAMP        DEFAULT     CURRENT_TIMESTAMP
+);
+
+DROP TABLE IF EXISTS Category;
+CREATE TABLE Category (
+	category_id      VARCHAR(150)     UNIQUE      PRIMARY KEY,
+	category_name    VARCHAR(350)
+);
+
+ALTER TABLE Category DROP INDEX category_id;
+
+
+DROP TABLE IF EXISTS Products;
+CREATE TABLE Products (
+    product_id         VARCHAR(100)     NOT NULL      PRIMARY KEY     UNIQUE,
+    product_name       VARCHAR(900)     NOT NULL,
+    category_id        VARCHAR(150),
+    link               VARCHAR(599)     NOT NULL,
+    rating             FLOAT            NOT NULL,
+    total_reviews      INT              NOT NULL,
+    price              VARCHAR(100)          NOT NULL,  
+    
+    CONSTRAINT products_fk_category FOREIGN KEY(category_id)
+    REFERENCES Category(category_id)
+);
+
+ALTER TABLE Products DROP INDEX product_id;
+
+
+DROP TABLE IF EXISTS Sentiments;
+CREATE TABLE Sentiments (
+    sentiment_id        INT              NOT NULL      UNIQUE      AUTO_INCREMENT     PRIMARY KEY,
+    sentiment      VARCHAR(300)      NOT NULL 
+);
+
+ALTER TABLE Sentiments AUTO_INCREMENT = 12050;
+
+
+DROP TABLE IF EXISTS Reviews;
+CREATE TABLE Reviews (
+    user_id         VARCHAR(100),
+    product_id      VARCHAR(100)     NOT NULL,
+	review_id       VARCHAR(100)     NOT NULL      PRIMARY KEY     UNIQUE,
+	rating          FLOAT            NOT NULL,
+    review_text     VARCHAR(3000),
+    sentiment_id      INT,
+    
+    CONSTRAINT reviews_fk_users FOREIGN KEY(user_id)
+    REFERENCES User_data(user_id),
+   
+    CONSTRAINT reviews_fk_products FOREIGN KEY(product_id)
+    REFERENCES Products(product_id),
+    
+    CONSTRAINT reviews_fk_sentiments FOREIGN KEY(sentiment_id)
+    REFERENCES Sentiments(sentiment_id)
+); 
+
+
+select *
+from category c 
+
+select *
+from reviews 
+
+select *
+from products 
+
+select *
+from user_data ud 
+
+select *
+from sentiments s 
