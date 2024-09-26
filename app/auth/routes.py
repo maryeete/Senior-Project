@@ -129,8 +129,9 @@ def sign_up():
     GET: Renders the sign-up page.
     """
     if request.method == 'POST':
-        handle_sign_up(request.form)
-        return redirect(url_for('auth.login'))
+        success = handle_sign_up(request.form)
+        if success:
+            return redirect(url_for('auth.login'))
     return render_template('signup.html')
 
 
