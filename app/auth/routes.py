@@ -28,11 +28,26 @@ Usage:
 from flask import Blueprint, redirect, render_template, request, url_for, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_user, logout_user, login_required, current_user
-from app.auth.models import db, User
 import re
-
+import mysql.connector
+from secret import db_host, db_user, db_password, db_database  # Importing MySQL DB credentials from secret.py
+from app import User
 
 auth = Blueprint('auth', __name__)
+
+def create_db_connection():
+    """
+    Create a database connection using MySQL credentials from secret.py.
+
+    Returns:
+        connection: MySQL connection object.
+    """
+    return mysql.connector.connect(
+        host=db_host,
+        user=db_user,
+        password=db_password,
+        database=db_database
+    )
 
 
 def is_valid_email(email):
@@ -63,8 +78,13 @@ def handle_sign_up(form):
     email = form.get('email')
     password = form.get('password')
 
-    user = User.query.filter_by(email=email).first()  # Check if the email already exists
-    if user:
+    # Check if email already exists in the User_data table
+    connection = create_db_connection()
+    cursor = connection.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM User_data WHERE email = %s", (email,))
+    existing_user = cursor.fetchone()
+
+    if existing_user:
         flash('Email already exists. Please log in.', category='error')
     elif not is_valid_email(email):
         flash('Invalid email format.', category='error')
@@ -73,13 +93,18 @@ def handle_sign_up(form):
     elif len(password) > 32:
         flash('Password cannot exceed 32 characters.', category='error')
     else:
-        new_user = User(name=name, email=email, password=generate_password_hash(password, method='scrypt'))
+        hashed_password = generate_password_hash(password, method='scrypt')
         try:
-            db.session.add(new_user)
-            db.session.commit()  # Save the new user to the database
+            # Insert new user into the User_data table
+            cursor.execute("INSERT INTO User_data (full_name, email, username, password) VALUES (%s, %s, %s, %s)",
+                           (name, email, email.split('@')[0], hashed_password))  # Using email prefix as username
+            connection.commit()  # Save the new user to the database
             flash('Account created!', category='success')
         except Exception as e:
             flash(f'Error creating account: {str(e)}', category='error')
+        finally:
+            cursor.close()
+            connection.close()
 
 
 def handle_sign_in(form):
@@ -95,17 +120,28 @@ def handle_sign_in(form):
     email = form.get('email')
     password = form.get('password')
 
-    user = User.query.filter_by(email=email).first()
+    # Fetch user by email from User_data table
+    connection = create_db_connection()
+    cursor = connection.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM User_data WHERE email = %s", (email,))
+    user_data = cursor.fetchone()
+    
     try:
-        if user and check_password_hash(user.password, password):
+        if user_data and check_password_hash(user_data['password'], password):
+            # Create a User object and log in the user
+            user = User(user_data['user_id'], user_data['full_name'], user_data['email'], user_data['username'])
             login_user(user)  # Use Flask-Login's login_user
             return redirect(url_for("auth.protected"))  # Redirect to protected page upon successful login
-        elif user:
+        elif user_data:
             flash('Incorrect password.', category='error')
         else:
             flash('Email does not exist.', category='error')
-    except:
+    except Exception:
         flash('An error occurred during login.', category='error')
+    finally:
+        cursor.close()
+        connection.close()
+    
     return redirect(url_for('auth.login'))
 
 
@@ -129,9 +165,9 @@ def sign_up():
     GET: Renders the sign-up page.
     """
     if request.method == 'POST':
-        success = handle_sign_up(request.form)
-        if success:
-            return redirect(url_for('auth.login'))
+        handle_sign_up(request.form)
+        return redirect(url_for('auth.login'))
+    
     return render_template('signup.html')
 
 
@@ -145,6 +181,7 @@ def login():
     """
     if request.method == 'POST':
         return handle_sign_in(request.form)
+    
     return render_template('login.html')
 
 
@@ -153,11 +190,24 @@ def login():
 def protected():
     """
     Renders the protected page, accessible only to logged-in users.
-
+    
     Returns:
-        Response: Renders the 'protected.html' template with the user's name.
+        Response: Renders the 'protected.html' template with the user's name and reviews.
     """
-    return render_template('protected.html', name=current_user.name)
+    user_id = current_user.id  # Assuming you have an `id` attribute in your User model
+    
+    # Connect to the MySQL database
+    connection = create_db_connection()
+    cursor = connection.cursor(dictionary=True)  # Use dictionary=True for results as dictionaries
+
+    # Query to get reviews for the logged-in user
+    cursor.execute("SELECT review_id, rating, review_text, sentiment_id FROM Reviews WHERE user_id = %s", (user_id,))
+    user_reviews = cursor.fetchall()  # Fetch all reviews for the user
+    
+    cursor.close()
+    connection.close()
+
+    return render_template('protected.html', name=current_user.full_name, reviews=user_reviews)
 
 
 @auth.route("/logout")

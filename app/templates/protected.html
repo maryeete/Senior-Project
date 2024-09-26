@@ -23,21 +23,23 @@
         <div class="card">
             <div class="card-body">
                 <h2>Your Sentiment Analysis Dashboard</h2>
-                <p>Here you can view your submitted texts and their sentiment analysis results.</p>
+                <p>Here you can view your submitted reviews and their sentiment analysis results.</p>
                 
-                <!-- Example of displaying user inputs -->
-                <div class="texts">
-                    <h3>Your Inputs</h3>
+                <div class="reviews">
+                    <h3>Your Reviews</h3>
                     <ul class="list-group">
-                        <!-- Sample items, replace with dynamic content -->
-                        <li class="list-group-item">
-                            <p><strong>Text:</strong> Sample input text 1</p>
-                            <p><strong>Sentiment:</strong> Positive</p>
-                        </li>
-                        <li class="list-group-item">
-                            <p><strong>Text:</strong> Sample input text 2</p>
-                            <p><strong>Sentiment:</strong> Negative</p>
-                        </li>
+                        {% if reviews %}
+                            {% for review in reviews %}
+                                <li class="list-group-item">
+                                    <p><strong>Review ID:</strong> {{ review.review_id }}</p>
+                                    <p><strong>Rating:</strong> {{ review.rating }}</p>
+                                    <p><strong>Text:</strong> {{ review.review_text }}</p>
+                                    <p><strong>Sentiment Rating:</strong> {{ review.sentiment_id }}</p>
+                                </li>
+                            {% endfor %}
+                        {% else %}
+                            <li class="list-group-item">No reviews found.</li>
+                        {% endif %}
                     </ul>
                 </div>
             </div>
@@ -54,4 +56,3 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
-\vspace{-15pt}
