@@ -1,12 +1,14 @@
 import pandas as pd
 import mysql.connector
 from mysql.connector import IntegrityError
+from secret import host, user, password, database
 
+# Connect to MySQL database
 data = mysql.connector.connect(
-    host='localhost',
-    user='root',
-    password='@MySeniorProJecT21',
-    database='senior project'
+    host=host,
+    user=user,
+    password=password,
+    database=database
 )
 
 cursor = data.cursor()
