@@ -1,15 +1,17 @@
 DROP DATABASE IF EXISTS Senior_Project;
 CREATE DATABASE Senior_Project;
 
-DROP TABLE IF EXISTS User_data;
+DROP TABLE IF EXISTS User_Data;
+
 CREATE TABLE User_data (
-    user_id          VARCHAR(100)     UNIQUE      PRIMARY KEY,
-	full_name        VARCHAR(150)     NOT NULL,
-    email            VARCHAR(150)     UNIQUE,
-    username         VARCHAR(100)     NOT NULL    UNIQUE,
-    password          VARCHAR(205),
-    date_created     TIMESTAMP        DEFAULT     CURRENT_TIMESTAMP
+    user_id          SERIAL PRIMARY KEY,  -- Change to SERIAL for auto-increment
+    full_name        VARCHAR(150) NOT NULL,
+    email            VARCHAR(150) UNIQUE,
+    username         VARCHAR(100) NOT NULL UNIQUE,
+    password         VARCHAR(205),
+    date_created     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
 
 DROP TABLE IF EXISTS Category;
 CREATE TABLE Category (
