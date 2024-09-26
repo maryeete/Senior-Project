@@ -17,6 +17,7 @@ __pycache__/
 *.so
 
 # Distribution / packaging
+/Database Files/secret.py
 .Python
 build/
 develop-eggs/
