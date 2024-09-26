@@ -194,7 +194,7 @@ def protected():
     Returns:
         Response: Renders the 'protected.html' template with the user's name and reviews.
     """
-    user_id = current_user.id  # Assuming you have an `id` attribute in your User model
+    user_id = current_user.id
     
     # Connect to the MySQL database
     connection = create_db_connection()
@@ -202,7 +202,7 @@ def protected():
 
     # Query to get reviews for the logged-in user
     cursor.execute("SELECT review_id, rating, review_text, sentiment_id FROM Reviews WHERE user_id = %s", (user_id,))
-    user_reviews = cursor.fetchall()  # Fetch all reviews for the user
+    user_reviews = cursor.fetchall()
     
     cursor.close()
     connection.close()
@@ -215,5 +215,5 @@ def logout():
     """
     Logs out the user by clearing the session data and redirects to the login page.
     """
-    logout_user()  # Use Flask-Login's logout_user
+    logout_user()
     return redirect(url_for("auth.login"))
