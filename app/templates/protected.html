@@ -5,11 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="protected.css">
 </head>
 <body>
     <header class="bg-primary text-white p-3">
-        <div class="container">
-            <h1>Welcome, {{ name }}!</h1>
+        <div class="container d-flex justify-content-between align-items-center">
+            <h1 class="h4">Welcome, {{ name }}!</h1>
             <nav>
                 <ul class="nav">
                     <li class="nav-item"><a class="nav-link text-white" href="{{ url_for('auth.logout') }}">Logout</a></li>
@@ -22,25 +23,31 @@
     <main class="container mt-4">
         <div class="card">
             <div class="card-body">
-                <h2>Your Sentiment Analysis Dashboard</h2>
+                <h2 class="card-title">Your Sentiment Analysis Dashboard</h2>
                 <p>Here you can view your submitted reviews and their sentiment analysis results.</p>
                 
                 <div class="reviews">
                     <h3>Your Reviews</h3>
-                    <ul class="list-group">
+                    <div class="row">
                         {% if reviews %}
                             {% for review in reviews %}
-                                <li class="list-group-item">
-                                    <p><strong>Review ID:</strong> {{ review.review_id }}</p>
-                                    <p><strong>Rating:</strong> {{ review.rating }}</p>
-                                    <p><strong>Review:</strong> {{ review.review_text }}</p>
-                                    <p><strong>Sentiment ID:</strong> {{ review.sentiment_id }}</p>
-                                </li>
+                                <div class="col-md-4 mb-4">
+                                    <div class="card review-card">
+                                        <div class="card-body">
+                                            <p><strong>Review ID:</strong> {{ review.review_id }}</p>
+                                            <p><strong>Rating:</strong> {{ review.rating }}</p>
+                                            <p><strong>Review:</strong> {{ review.review_text[:100] }}{% if review.review_text|length > 100 %}...{% endif %}</p>
+                                            <p><strong>Sentiment ID:</strong> {{ review.sentiment_id }}</p>
+                                        </div>
+                                    </div>
+                                </div>
                             {% endfor %}
                         {% else %}
-                            <li class="list-group-item">No reviews found.</li>
+                            <div class="col-md-12">
+                                <div class="alert alert-warning">No reviews found.</div>
+                            </div>
                         {% endif %}
-                    </ul>
+                    </div>
                 </div>
             </div>
         </div>
