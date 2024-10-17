@@ -1,8 +1,5 @@
 # Senior Project
 
-
-<br>
-
 ## Setup
 
 Install all dependencies: 
