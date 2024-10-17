@@ -59,19 +59,47 @@ main {
     margin-top: 0;
 }
 
-.texts ul {
-    list-style: none;
-    padding: 0;
+.reviews {
+    display: flex;
+    flex-wrap: wrap; /* Allow cards to wrap to the next line */
+    justify-content: space-between; /* Distribute space evenly */
 }
 
-.texts li {
-    padding: 10px;
-    border-bottom: 1px solid #ddd;
+.reviews .card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    width: 30%; /* Fixed width for the cards */
+    margin-bottom: 20px; /* Spacing between rows */
+    height: 250px; /* Set a fixed height */
+    display: flex;
+    flex-direction: column; /* Align items vertically */
+    justify-content: space-between; /* Space items evenly */
+    overflow: hidden; /* Prevent overflow */
 }
 
-.texts p {
+.reviews .card-body {
+    flex: 1; /* Allow card body to grow */
+    display: flex;
+    flex-direction: column; /* Align items vertically */
+    justify-content: flex-start; /* Align items at the start */
+}
+
+.reviews .card-body p {
     margin: 5px 0;
+    flex-grow: 1; /* Allow paragraphs to take available space */
 }
+
+/* Specific for review text */
+.reviews .card-body p.review-text {
+    display: -webkit-box; /* For WebKit browsers */
+    -webkit-box-orient: vertical; /* Set the box orientation to vertical */
+    -webkit-line-clamp: 3; /* Limit to 3 lines of text */
+    overflow: hidden; /* Hide any overflow text */
+    text-overflow: ellipsis; /* Add ellipsis for overflow */
+    height: 60px; /* Fixed height for the review text */
+    line-height: 20px; /* Set line height for proper spacing */
+}
+
 
 /* Footer styles */
 footer {
