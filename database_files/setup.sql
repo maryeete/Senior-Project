@@ -67,10 +67,3 @@ CREATE TABLE Reviews (
     CONSTRAINT reviews_fk_sentiments FOREIGN KEY (sentiment_id)
     REFERENCES Sentiments(sentiment_id)
 );
-
--- Select statements to retrieve data from each table
-SELECT * FROM User_Data;
-SELECT * FROM Category;
-SELECT * FROM Products;
-SELECT * FROM Sentiments;
-SELECT * FROM Reviews;
