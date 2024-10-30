@@ -39,6 +39,15 @@
             </ul>
         </div>
 
+        <!-- Sort By Dropdown -->
+        <div class="mb-4">
+            <label for="sort-reviews" class="mr-2">Sort By:</label>
+            <select id="sort-reviews" class="form-control" onchange="sortReviews()">
+                <option value="rating_asc" {% if request.args.get('sort') == 'rating_asc' %}selected{% endif %}>Rating (Ascending)</option>
+                <option value="rating_desc" {% if request.args.get('sort') == 'rating_desc' %}selected{% endif %}>Rating (Descending)</option>
+            </select>
+        </div>
+
         <!-- Text Sentiment Analysis Section -->
         <div id="text-sentiment" style="display: block;">
             <h3>Text Reviews Sentiment</h3>
@@ -117,6 +126,14 @@
                 link.classList.remove('active');
             }
         });
+
+        // Function to sort reviews
+        function sortReviews() {
+            const sortValue = document.getElementById('sort-reviews').value;
+            const currentUrl = new URL(window.location.href);
+            currentUrl.searchParams.set('sort', sortValue);
+            window.location.href = currentUrl.href; // Redirect to the updated URL
+        }
     </script>
 </body>
 </html>

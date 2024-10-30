@@ -186,19 +186,29 @@ def index():
         Response: Renders the 'index.html' template with the user's name and reviews.
     """
     user_id = current_user.id
-    
+    sort_option = request.args.get('sort', 'rating_asc')  # Get sort option from URL, default to ascending
+
     # Connect to the MySQL database
     connection = create_db_connection()
     cursor = connection.cursor(dictionary=True)  # Use dictionary=True for results as dictionaries
 
-    # Query to get reviews for the logged-in user
-    cursor.execute("SELECT review_id, rating, review_text, sentiment_id FROM Reviews WHERE user_id = %s", (user_id,))
-    user_reviews = cursor.fetchall()
+    # Base query to get reviews for the logged-in user
+    query = "SELECT review_id, rating, review_text, sentiment_id FROM Reviews WHERE user_id = %s"
     
+    # Modify query based on sort option
+    if sort_option == 'rating_asc':
+        query += " ORDER BY rating ASC"
+    elif sort_option == 'rating_desc':
+        query += " ORDER BY rating DESC"
+
+    cursor.execute(query, (user_id,))
+    user_reviews = cursor.fetchall()
+
     cursor.close()
     connection.close()
 
     return render_template('index.html', name=current_user.full_name, reviews=user_reviews)
+
 
 
 @auth.route("/logout")
