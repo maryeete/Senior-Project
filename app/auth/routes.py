@@ -2,17 +2,16 @@
 Authentication Blueprint for Flask Application
 
 This module handles user authentication, including sign-up, sign-in, and session management.
-It includes routes for logging in, signing up, logging out, and accessing protected content.
+It includes routes for logging in, signing up, logging out, and accessing index content.
 The module also contains helper functions for validating user input and ensuring secure password storage.
 
 Blueprints:
     - auth: Handles all routes and functions related to user authentication.
 
 Routes:
-    - /: Displays a "Hello World" message on the home page.
+    - /: Accessible only to logged-in users, renders a index page.
     - /signup: Handles sign-up form submissions and renders the sign-up page.
     - /login: Handles login form submissions and renders the login page.
-    - /protected: Accessible only to logged-in users, renders a protected page.
     - /logout: Clears session data and logs out the user.
 
 Functions:
@@ -119,7 +118,7 @@ def handle_login(form):
         form (dict): The form data containing 'email' and 'password'.
 
     Returns:
-        Response: Redirects to the protected page if successful, otherwise returns None.
+        Response: Redirects to the index page if successful, otherwise returns None.
     """
     email = form.get('email')
     password = form.get('password')
@@ -135,7 +134,7 @@ def handle_login(form):
             # Create a User object and log in the user
             user = User(user_data['user_id'], user_data['full_name'], user_data['email'], user_data['username'])
             login_user(user)  # Use Flask-Login's login_user
-            return redirect(url_for("auth.protected"))  # Redirect to protected page upon successful login
+            return redirect(url_for("auth.index"))  # Redirect to index page upon successful login
         elif user_data:
             flash('Incorrect password.', category='error')
         else:
@@ -179,12 +178,12 @@ def login():
 
 @auth.route("/")
 @login_required
-def protected():
+def index():
     """
-    Renders the protected page, accessible only to logged-in users.
+    Renders the index page, accessible only to logged-in users.
     
     Returns:
-        Response: Renders the 'protected.html' template with the user's name and reviews.
+        Response: Renders the 'index.html' template with the user's name and reviews.
     """
     user_id = current_user.id
     
@@ -199,7 +198,7 @@ def protected():
     cursor.close()
     connection.close()
 
-    return render_template('protected.html', name=current_user.full_name, reviews=user_reviews)
+    return render_template('index.html', name=current_user.full_name, reviews=user_reviews)
 
 
 @auth.route("/logout")
