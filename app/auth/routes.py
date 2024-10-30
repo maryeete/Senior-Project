@@ -17,8 +17,8 @@ Routes:
 
 Functions:
     - login_is_required: A decorator to restrict access to routes unless the user is logged in.
-    - handle_sign_up: Processes the sign-up form, validates input, and stores the user in the database.
-    - handle_sign_in: Processes the login form, validates credentials, and initiates the user session.
+    - handle_signup: Processes the sign-up form, validates input, and stores the user in the database.
+    - handle_login: Processes the login form, validates credentials, and initiates the user session.
 
 Usage:
     This blueprint can be registered in the main Flask application to enable user authentication
@@ -64,7 +64,7 @@ def is_valid_email(email):
     return re.match(pattern, email) is not None
 
 
-def handle_sign_up(form):
+def handle_signup(form):
     """
     Processes the sign-up form submission.
 
@@ -86,6 +86,7 @@ def handle_sign_up(form):
 
     if existing_user:
         flash('Email already exists. Please log in.', category='error')
+        return redirect(url_for('auth.login'))  # Redirect to login if email exists
     elif not is_valid_email(email):
         flash('Invalid email format.', category='error')
     elif len(password) < 6:
@@ -100,14 +101,17 @@ def handle_sign_up(form):
                            (name, email, email.split('@')[0], hashed_password))  # Using email prefix as username
             connection.commit()  # Save the new user to the database
             flash('Account created!', category='success')
+            return redirect(url_for("auth.login"))
         except Exception as e:
             flash(f'Error creating account: {str(e)}', category='error')
         finally:
             cursor.close()
             connection.close()
 
+    return redirect(url_for('auth.signup'))  # Redirect to signup if there were validation errors
 
-def handle_sign_in(form):
+
+def handle_login(form):
     """
     Processes the login form submission.
 
@@ -142,31 +146,19 @@ def handle_sign_in(form):
         cursor.close()
         connection.close()
     
-    return redirect(url_for('auth.login'))
-
-
-@auth.route("/")
-def index():
-    """
-    Renders a test index page that displays 'Hello World'.
-    
-    Returns:
-        Response: Renders the 'index.html' template.
-    """
-    return render_template('index.html')
+    return redirect(url_for('auth.login'))  # Redirect to login page if login fails
 
 
 @auth.route("/signup", methods=['GET', 'POST'])
-def sign_up():
+def signup():
     """
-    Handles the sign-up form submission.
+    Handles the signup form submission.
 
     POST: Processes the sign-up form and creates a new user if valid.
     GET: Renders the sign-up page.
     """
     if request.method == 'POST':
-        handle_sign_up(request.form)
-        return redirect(url_for('auth.login'))
+        return handle_signup(request.form)  # Ensure to return the redirect
     
     return render_template('signup.html')
 
@@ -180,12 +172,12 @@ def login():
     GET: Renders the login page.
     """
     if request.method == 'POST':
-        return handle_sign_in(request.form)
+        return handle_login(request.form)
     
     return render_template('login.html')
 
 
-@auth.route("/protected")
+@auth.route("/")
 @login_required
 def protected():
     """
