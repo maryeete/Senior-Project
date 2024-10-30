@@ -28,8 +28,6 @@ python3 main.py
 
 To-Do:
 
-    - Verify Flask message flashing. Currently displaying success text in error flash box.
-
     - Add file upload.
 
     - Text and audio segment on dashboard.
