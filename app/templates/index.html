@@ -24,7 +24,6 @@
         <h2 class="card-title">Your Sentiment Analysis Dashboard</h2>
         <p>Here you can view your submitted reviews and their sentiment analysis results.</p>
 
-        <!-- Clickable List for Sentiment Analysis Type -->
         <div class="mb-4">
             <ul class="nav nav-pills">
                 <li class="nav-item">
@@ -37,15 +36,6 @@
                     <a class="nav-link" href="?section=overall">Overall</a>
                 </li>
             </ul>
-        </div>
-
-        <!-- Sort By Dropdown -->
-        <div class="mb-4">
-            <label for="sort-reviews" class="mr-2">Sort By:</label>
-            <select id="sort-reviews" class="form-control" onchange="sortReviews()">
-                <option value="rating_asc" {% if request.args.get('sort') == 'rating_asc' %}selected{% endif %}>Rating (Ascending)</option>
-                <option value="rating_desc" {% if request.args.get('sort') == 'rating_desc' %}selected{% endif %}>Rating (Descending)</option>
-            </select>
         </div>
 
         <!-- Text Sentiment Analysis Section -->
@@ -76,19 +66,37 @@
         <!-- Audio Sentiment Analysis Section -->
         <div id="audio-sentiment" style="display: none;">
             <h3>Audio Reviews Sentiment</h3>
-            <div class="row">
-                <div class="col-md-4 mb-4">
-                    <div class="card review-card">
-                        <div class="card-body">
-                            <p><strong>Audio ID:</strong> test</p>
-                            <p><strong>Audio Length:</strong> test</p>
-                            <audio controls>
-                                <source src="audio1.mp3" type="audio/mpeg">
-                                Your browser does not support the audio element.
-                            </audio>
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <form action="{{ url_for('auth.upload_audio') }}" method="POST" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="audio_file">Upload Audio File:</label>
+                            <input type="file" class="form-control-file" id="audio_file" name="audio_file" accept="audio/*" required>
                         </div>
-                    </div>
+                        <button type="submit" class="btn btn-primary">Upload</button>
+                    </form>
                 </div>
+            </div>
+            <div class="row">
+                {% if audio_files %}
+                    {% for audio in audio_files %}
+                        <div class="col-md-4 mb-4">
+                            <div class="card review-card">
+                                <div class="card-body">
+                                    <p><strong>Audio File:</strong> {{ audio }}</p>
+                                    <audio controls>
+                                        <source src="{{ url_for('static', filename='uploads/' ~ audio) }}" type="audio/mpeg">
+                                        Your browser does not support the audio element.
+                                    </audio>                                    
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="col-md-12">
+                        <div class="alert alert-warning">No audio files found.</div>
+                    </div>
+                {% endif %}
             </div>
         </div>
 
@@ -110,7 +118,6 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
     <script>
-        // JavaScript to handle tab switching
         const urlParams = new URLSearchParams(window.location.search);
         const section = urlParams.get('section') || 'text';
 
@@ -118,7 +125,6 @@
         document.getElementById('audio-sentiment').style.display = section === 'audio' ? 'block' : 'none';
         document.getElementById('overall-sentiment').style.display = section === 'overall' ? 'block' : 'none';
         
-        // Set active class for navigation
         document.querySelectorAll('.nav-link').forEach(link => {
             if (link.getAttribute('href') === `?section=${section}`) {
                 link.classList.add('active');
@@ -126,14 +132,6 @@
                 link.classList.remove('active');
             }
         });
-
-        // Function to sort reviews
-        function sortReviews() {
-            const sortValue = document.getElementById('sort-reviews').value;
-            const currentUrl = new URL(window.location.href);
-            currentUrl.searchParams.set('sort', sortValue);
-            window.location.href = currentUrl.href; // Redirect to the updated URL
-        }
     </script>
 </body>
 </html>

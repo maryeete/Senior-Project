@@ -26,9 +26,11 @@ Usage:
 
 from flask import Blueprint, redirect, render_template, request, url_for, flash
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 from flask_login import login_user, logout_user, login_required, current_user
 import re
 import mysql.connector
+import os
 from secret import db_host, db_user, db_password, db_database  # Importing MySQL DB credentials from secret.py
 from app import User
 
@@ -176,6 +178,8 @@ def login():
     return render_template('login.html')
 
 
+import os
+
 @auth.route("/")
 @login_required
 def index():
@@ -183,32 +187,26 @@ def index():
     Renders the index page, accessible only to logged-in users.
     
     Returns:
-        Response: Renders the 'index.html' template with the user's name and reviews.
+        Response: Renders the 'index.html' template with the user's name, reviews, and uploaded audio files.
     """
     user_id = current_user.id
-    sort_option = request.args.get('sort', 'rating_asc')  # Get sort option from URL, default to ascending
-
+    
     # Connect to the MySQL database
     connection = create_db_connection()
     cursor = connection.cursor(dictionary=True)  # Use dictionary=True for results as dictionaries
 
-    # Base query to get reviews for the logged-in user
-    query = "SELECT review_id, rating, review_text, sentiment_id FROM Reviews WHERE user_id = %s"
-    
-    # Modify query based on sort option
-    if sort_option == 'rating_asc':
-        query += " ORDER BY rating ASC"
-    elif sort_option == 'rating_desc':
-        query += " ORDER BY rating DESC"
-
-    cursor.execute(query, (user_id,))
+    # Query to get reviews for the logged-in user
+    cursor.execute("SELECT review_id, rating, review_text, sentiment_id FROM Reviews WHERE user_id = %s", (user_id,))
     user_reviews = cursor.fetchall()
+
+    # List uploaded audio files
+    audio_directory = 'app/static/uploads/'  # Adjust this path based on your structure
+    audio_files = [f for f in os.listdir(audio_directory) if os.path.isfile(os.path.join(audio_directory, f))]
 
     cursor.close()
     connection.close()
 
-    return render_template('index.html', name=current_user.full_name, reviews=user_reviews)
-
+    return render_template('index.html', name=current_user.full_name, reviews=user_reviews, audio_files=audio_files)
 
 
 @auth.route("/logout")
@@ -218,3 +216,32 @@ def logout():
     """
     logout_user()
     return redirect(url_for("auth.login"))
+
+
+@auth.route("/upload_audio", methods=["POST"])
+@login_required
+def upload_audio():
+    """
+    User-uploaded audio file stored in /uploads.
+    """
+    if 'audio_file' not in request.files:
+        flash('No file part', 'error')
+        return redirect(url_for('auth.index'))
+
+    file = request.files['audio_file']
+    if file.filename == '':
+        flash('No selected file', 'error')
+        return redirect(url_for('auth.index'))
+
+    try:
+        # Ensure the uploads directory exists
+        os.makedirs('app/static/uploads', exist_ok=True)
+        
+        # Use secure_filename to avoid issues with special characters
+        filename = secure_filename(file.filename)
+        file.save(f'app/static/uploads/{filename}')
+        flash('Audio file uploaded successfully!', 'success')
+    except Exception as e:
+        flash(f'Failed to upload audio file: {str(e)}', 'error')
+
+    return redirect(url_for('auth.index') + '?section=audio')

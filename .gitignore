@@ -1,7 +1,9 @@
 # Created by https://www.toptal.com/developers/gitignore/api/python,macos,flask,windows,linux
 # Edit at https://www.toptal.com/developers/gitignore?templates=python,macos,flask,windows,linux
 
-### Flask ###
+# misc
+app/static/uploads/*
+!app/static/uploads/.gitkeep### Flask ###
 instance/*
 !instance/.gitignore
 .webassets-cache
