@@ -1,0 +1,6 @@
+// For Sebs Code:
+pip3 install opencv-python
+pip3 install fer
+pip3 install matplotlib
+pip3 install numpy
+pip install numpy pandas scikit-learn librosa
