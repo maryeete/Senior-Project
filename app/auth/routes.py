@@ -46,7 +46,7 @@ def create_db_connection():
     return mysql.connector.connect(
         host=db_host,
         user=db_user,
-        password=db_password,
+        # password=db_password,
         database=db_database
     )
 
@@ -178,8 +178,6 @@ def login():
     return render_template('login.html')
 
 
-import os
-
 @auth.route("/")
 @login_required
 def index():
@@ -199,6 +197,12 @@ def index():
     cursor.execute("SELECT review_id, rating, review_text, sentiment_id FROM Reviews WHERE user_id = %s", (user_id,))
     user_reviews = cursor.fetchall()
 
+    # Calculate the average rating
+    if user_reviews:
+        average_rating = sum(review['rating'] for review in user_reviews) / len(user_reviews)
+    else:
+        average_rating = 0  # Default to 0 if no reviews are found
+
     # List uploaded audio files
     audio_directory = 'app/static/uploads/'  # Adjust this path based on your structure
     audio_files = [f for f in os.listdir(audio_directory) if os.path.isfile(os.path.join(audio_directory, f))]
@@ -206,7 +210,7 @@ def index():
     cursor.close()
     connection.close()
 
-    return render_template('index.html', name=current_user.full_name, reviews=user_reviews, audio_files=audio_files)
+    return render_template('index.html', name=current_user.full_name, reviews=user_reviews, audio_files=audio_files, average_rating=average_rating)
 
 
 @auth.route("/logout")

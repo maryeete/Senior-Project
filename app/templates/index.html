@@ -6,6 +6,7 @@
     <title>Dashboard</title>
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="index.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Include Chart.js -->
 </head>
 <body>
     <header class="bg-primary text-white p-3">
@@ -103,8 +104,11 @@
         <!-- Overall Sentiment Analysis Section -->
         <div id="overall-sentiment" style="display: none;">
             <h3>Overall Sentiment</h3>
-            <p>Overall Score: test</p>
-            <p>Overall Sentiment: Test</p>
+            <p><strong>Average Review Rating:</strong> {{ average_rating | round(2) }}</p> <!-- Display average rating -->
+            <p><strong>Overall Sentiment:</strong> Test</p>
+
+            <h4>Rating Distribution</h4>
+            <canvas id="ratingChart" width="400" height="200"></canvas> <!-- Chart.js canvas -->
         </div>
     </main>
     
@@ -130,6 +134,39 @@
                 link.classList.add('active');
             } else {
                 link.classList.remove('active');
+            }
+        });
+
+        // Prepare data for the chart
+        const ratings = [ {% for review in reviews %} {{ review.rating }} {% if not loop.last %}, {% endif %} {% endfor %} ];
+        
+        // Create the chart
+        const ctx = document.getElementById('ratingChart').getContext('2d');
+        const ratingChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['1', '2', '3', '4', '5'], // Assuming ratings range from 1 to 5
+                datasets: [{
+                    label: 'Number of Reviews',
+                    data: [
+                        ratings.filter(r => r === 1).length,
+                        ratings.filter(r => r === 2).length,
+                        ratings.filter(r => r === 3).length,
+                        ratings.filter(r => r === 4).length,
+                        ratings.filter(r => r === 5).length
+                    ],
+                    backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
             }
         });
     </script>
