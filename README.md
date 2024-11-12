@@ -28,8 +28,4 @@ python3 main.py
 
 To-Do:
 
-    - Add file upload.
-
-    - Text and audio segment on dashboard.
-
     - Add percentage "meter" on dashboard (overall and for text/audio).
