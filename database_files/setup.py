@@ -27,7 +27,7 @@ SECTION: Initial Database setup
 data = mysql.connector.connect(
     host=db_host,
     user=db_user,
-    password=db_password,
+    # password=db_password,
 )
 
 cursor = data.cursor()
