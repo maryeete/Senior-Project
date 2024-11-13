@@ -119,7 +119,7 @@ def sort_audio_files(input_folder, output_folder, scaler, model):
                 print(f"Error processing {file_path}: {str(e)}")
 
 def main():
-    archive_path = os.path.expanduser('~/Downloads/archive')
+    archive_path = os.path.expanduser('~/Downloads/sentiment_analysis/archive')
     sorted_dataset_path = os.path.expanduser('~/sorted_emotion_audio_dataset')
     
     if not os.path.exists(archive_path):
