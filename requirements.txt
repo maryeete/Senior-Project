@@ -1,4 +1,5 @@
 absl-py==2.1.0
+astunparse==1.6.3
 audioread==3.0.1
 blinker==1.9.0
 certifi==2024.8.30
@@ -14,8 +15,12 @@ ffmpeg==1.4
 filelock==3.16.1
 Flask==3.0.3
 Flask-Login==0.6.3
+flatbuffers==24.3.25
 fonttools==4.54.1
 fsspec==2024.10.0
+gast==0.6.0
+google-pasta==0.2.0
+grpcio==1.67.1
 h5py==3.12.1
 idna==3.10
 imageio==2.36.0
@@ -26,13 +31,15 @@ joblib==1.4.2
 keras==3.6.0
 kiwisolver==1.4.7
 lazy_loader==0.4
+libclang==18.1.1
 librosa==0.10.2.post1
 llvmlite==0.43.0
+Markdown==3.7
 markdown-it-py==3.0.0
 MarkupSafe==3.0.2
 matplotlib==3.9.2
 mdurl==0.1.2
-ml_dtypes==0.5.0
+ml-dtypes==0.4.1
 moviepy==1.0.3
 mpmath==1.3.0
 msgpack==1.1.0
@@ -43,6 +50,7 @@ numba==0.60.0
 numpy==1.26.4
 opencv-contrib-python==4.10.0.84
 opencv-python==4.10.0.84
+opt_einsum==3.4.0
 optree==0.13.1
 packaging==24.2
 pandas==2.2.3
@@ -50,6 +58,7 @@ pillow==10.2.0
 platformdirs==4.3.6
 pooch==1.8.2
 proglog==0.1.10
+protobuf==5.28.3
 pycparser==2.22
 Pygments==2.18.0
 pyparsing==3.2.0
@@ -63,6 +72,11 @@ six==1.16.0
 soundfile==0.12.1
 soxr==0.5.0.post1
 sympy==1.13.3
+tensorboard==2.18.0
+tensorboard-data-server==0.7.2
+tensorflow==2.18.0
+tensorflow-io-gcs-filesystem==0.37.1
+termcolor==2.5.0
 threadpoolctl==3.5.0
 torch==2.2.2
 torchvision==0.17.2
@@ -71,3 +85,4 @@ typing_extensions==4.12.2
 tzdata==2024.2
 urllib3==2.2.3
 Werkzeug==3.1.3
+wrapt==1.16.0
