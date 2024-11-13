@@ -24,7 +24,7 @@ Usage:
     functionality. The routes rely on session management to keep track of the logged-in state.
 """
 
-from flask import Blueprint, redirect, render_template, request, url_for, flash
+from flask import Blueprint, current_app, redirect, render_template, request, url_for, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from flask_login import login_user, logout_user, login_required, current_user
@@ -33,8 +33,13 @@ import mysql.connector
 import os
 from secret import db_host, db_user, db_password, db_database  # Importing MySQL DB credentials from secret.py
 from app import User
+from flask import Blueprint, render_template, Response
+import cv2
+from fer import FER
+
 
 auth = Blueprint('auth', __name__)
+
 
 def create_db_connection():
     """
@@ -249,3 +254,56 @@ def upload_audio():
         flash(f'Failed to upload audio file: {str(e)}', 'error')
 
     return redirect(url_for('auth.index') + '?section=audio')
+
+
+# Initialize the emotion detector outside the function for efficiency
+emotion_detector = FER(mtcnn=True)
+
+
+def generate_frames():
+    cap = cv2.VideoCapture(0)  # Open the webcam
+    
+    while True:
+        success, frame = cap.read()  # Read the frame
+        
+        if not success:
+            break
+        
+        # Detect emotions in the frame
+        result = emotion_detector.detect_emotions(frame)
+        
+        if result:
+            face = result[0]
+            emotions = face['emotions']
+            x, y, w, h = face['box']
+            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+            dominant_emotion = max(emotions.items(), key=lambda x: x[1])[0]
+            confidence = emotions[dominant_emotion]
+            text = f"{dominant_emotion}: {confidence:.2f}"
+            cv2.putText(frame, text, (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 
+                        0.9, (0, 255, 0), 2)
+
+            # Print emotions to terminal
+            print("\nDetected emotions:")
+            for emotion, score in emotions.items():
+                print(f"{emotion}: {score:.2f}")
+        
+        # Encode the frame in JPEG format
+        ret, buffer = cv2.imencode('.jpg', frame)
+        frame = buffer.tobytes()
+
+        # Yield the frame to display
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+    
+    cap.release()
+
+
+@auth.route('/analyze_video')
+def analyze_video():
+    return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+
+@auth.route('/video_analysis_page')
+def emotion_analysis_page():
+    return render_template('analyze_video.html')
