@@ -28,4 +28,9 @@ python3 main.py
 
 To-Do:
 
-    - Add percentage "meter" on dashboard (overall and for text/audio).
+    - Set MySQL password default to ON
+
+    - Integrate Seb's page with Flask
+
+    - Associate users with MySQL Reviews table
+    
