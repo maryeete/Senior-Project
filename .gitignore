@@ -3,7 +3,9 @@
 
 # misc
 app/static/uploads/*
-!app/static/uploads/.gitkeep### Flask ###
+!app/static/uploads/
+app/static/images/*
+!app/static/images/
 instance/*
 !instance/.gitignore
 .webassets-cache
