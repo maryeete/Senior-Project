@@ -347,8 +347,20 @@ class EmotionAnalyzer:
             with open(audio_path, 'rb') as audio_file:
                 audio_blob = audio_file.read()
             
+            formatted_results = [{
+                'dominant_emotion': {
+                    'name': max(results, key=results.get),
+                    'confidence': max(results.values())
+                },
+                'other_emotions': [
+                    {'name': emotion, 'confidence': float(prob)} 
+                    for emotion, prob in results.items() 
+                    if prob < max(results.values())
+                ]
+            }]
+            
             # Store emotion data in the database
-            self.store_emotion_data(current_user.id, results, audio_blob, "audio")
+            self.store_emotion_data(current_user.id, formatted_results, audio_blob, "audio")            
             
             return results
             
@@ -384,9 +396,19 @@ class EmotionAnalyzer:
             
             # Convert real-time audio data to binary blob
             audio_blob = audio_data.tobytes()
-            
+            formatted_results = [{
+                'dominant_emotion': {
+                    'name': max(results, key=results.get),
+                    'confidence': max(results.values())
+                },
+                'other_emotions': [
+                    {'name': emotion, 'confidence': float(prob)} 
+                    for emotion, prob in results.items() 
+                    if prob < max(results.values())
+                ]
+            }]
             # Store emotion data in the database
-            self.store_emotion_data(current_user.id, results, audio_blob, "audio")
+            self.store_emotion_data(current_user.id, formatted_results, audio_blob, "audio")            
             
             return results
             
@@ -401,13 +423,23 @@ class EmotionAnalyzer:
             video_results = self.analyze_image(frame)
             audio_results = self.analyze_realtime_audio(audio_data) if audio_data is not None else None
             
-            # Store the results in the database if audio data is provided
+            # Format results for DB storage
             if audio_results is not None:
                 audio_blob = audio_data.tobytes()  # Convert audio data to binary blob
+                audio_results = [{
+                    'dominant_emotion': {
+                        'name': max(audio_results, key=audio_results.get),
+                        'confidence': max(audio_results.values())
+                    },
+                    'other_emotions': [
+                        {'name': emotion, 'confidence': float(prob)} 
+                        for emotion, prob in audio_results.items() 
+                        if prob < max(audio_results.values())
+                    ]
+                }]
+                
+                # Store audio result in DB
                 self.store_emotion_data(current_user.id, audio_results, audio_blob, "audio")
-            
-            # Store video results (optional, if you want to store video data too)
-            # If you want to store video data, convert it to binary and call store_emotion_data similarly
             
             results = {
                 'video': video_results,
@@ -440,10 +472,19 @@ class EmotionAnalyzer:
             emotion_labels = ['angry', 'happy', 'sad', 'neutral']  # Adjust based on your model
             emotion = emotion_labels[emotion_idx]
             
+            # Format results for DB storage
+            formatted_results = [{
+                'dominant_emotion': {
+                    'name': emotion,
+                    'confidence': round(confidence, 1)
+                },
+                'other_emotions': []  # No other emotions in this case
+            }]
+            
             # Store emotion data in the database (if audio_data is provided)
             if audio_data is not None:
                 audio_blob = audio_data.tobytes()  # Convert audio data to binary blob
-                self.store_emotion_data(current_user.id, {emotion: confidence}, audio_blob, "audio")
+                self.store_emotion_data(current_user.id, formatted_results, audio_blob, "audio")
                 
             return {
                 "emotion": emotion,
