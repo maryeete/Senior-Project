@@ -210,7 +210,7 @@ class EmotionAnalyzer:
             self.audio_model = None
             self.scaler = None
 
-    def store_image_emotion_data(self, user_id, file, emotion_data):
+    def store_emotion_data(self, user_id, emotion_data, file, file_type):
         """Store the emotion data along with the file in the database."""
         try:
             # Establish DB connection
@@ -227,12 +227,12 @@ class EmotionAnalyzer:
             
             # Prepare the insert statement
             query = """
-                INSERT INTO user_emotions (user_id, emotion_data, file)
-                VALUES (%s, %s, %s)
+                INSERT INTO user_emotions (user_id, emotion_data, file, file_type)
+                VALUES (%s, %s, %s, %s)
             """
             
             # Execute the query
-            cursor.execute(query, (user_id, emotion_data_json, file))
+            cursor.execute(query, (user_id, emotion_data_json, file, file_type))
             conn.commit()
             
             # Close the connection
@@ -286,14 +286,13 @@ class EmotionAnalyzer:
                         if emotion[1] > 5  # Only show emotions with >5% confidence
                     ]
                 })
-            
             # Store the image (as a LONGBLOB) and emotion data in the database
             # Convert image to bytes
             _, img_bytes = cv2.imencode('.jpg', image)
             img_blob = img_bytes.tobytes()
             
             # Store emotion data and file in the database
-            self.store_image_emotion_data(current_user.id, img_blob, formatted_results)
+            self.store_emotion_data(current_user.id, formatted_results, img_blob, 'image')
             return formatted_results
                 
         except Exception as e:
@@ -344,6 +343,13 @@ class EmotionAnalyzer:
             # Create results dictionary
             results = {emotion: float(prob) for emotion, prob in zip(emotions, proba)}
             
+            # Convert audio file to binary blob
+            with open(audio_path, 'rb') as audio_file:
+                audio_blob = audio_file.read()
+            
+            # Store emotion data in the database
+            self.store_emotion_data(current_user.id, results, audio_blob, "audio")
+            
             return results
             
         except Exception as e:
@@ -376,25 +382,45 @@ class EmotionAnalyzer:
             # Create results dictionary
             results = {emotion: float(prob) for emotion, prob in zip(emotions, proba)}
             
+            # Convert real-time audio data to binary blob
+            audio_blob = audio_data.tobytes()
+            
+            # Store emotion data in the database
+            self.store_emotion_data(current_user.id, results, audio_blob, "audio")
+            
             return results
             
         except Exception as e:
             print(f"Error in real-time audio analysis: {e}")
             return {"neutral": 1.0}
-
+            
     def analyze_combined_frame(self, frame, audio_data=None):
-        """Analyze both video frame and audio data"""
+        """Analyze both video frame and audio data and store the results."""
         try:
+            # Analyze video and audio
+            video_results = self.analyze_image(frame)
+            audio_results = self.analyze_realtime_audio(audio_data) if audio_data is not None else None
+            
+            # Store the results in the database if audio data is provided
+            if audio_results is not None:
+                audio_blob = audio_data.tobytes()  # Convert audio data to binary blob
+                self.store_emotion_data(current_user.id, audio_results, audio_blob, "audio")
+            
+            # Store video results (optional, if you want to store video data too)
+            # If you want to store video data, convert it to binary and call store_emotion_data similarly
+            
             results = {
-                'video': self.analyze_image(frame),
-                'audio': self.analyze_realtime_audio(audio_data) if audio_data is not None else None
+                'video': video_results,
+                'audio': audio_results
             }
+            
             return results
         except Exception as e:
             print(f"Error in combined analysis: {e}")
             return {'video': [], 'audio': None}
 
-    def predict_audio_emotion(self, feature_vector):
+
+    def predict_audio_emotion(self, feature_vector, audio_data=None):
         """Predict emotion from audio features"""
         try:
             # Load the model if not already loaded
@@ -414,11 +440,15 @@ class EmotionAnalyzer:
             emotion_labels = ['angry', 'happy', 'sad', 'neutral']  # Adjust based on your model
             emotion = emotion_labels[emotion_idx]
             
+            # Store emotion data in the database (if audio_data is provided)
+            if audio_data is not None:
+                audio_blob = audio_data.tobytes()  # Convert audio data to binary blob
+                self.store_emotion_data(current_user.id, {emotion: confidence}, audio_blob, "audio")
+                
             return {
                 "emotion": emotion,
                 "confidence": float(confidence)
             }
-            
         except Exception as e:
             print(f"Error predicting audio emotion: {str(e)}")
             return {"emotion": "unknown", "confidence": 0}
