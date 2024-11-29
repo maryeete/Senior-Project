@@ -294,7 +294,7 @@ class EmotionAnalyzer:
             # Store emotion data and file in the database
             self.store_emotion_data(current_user.id, formatted_results, img_blob, 'image')
             return formatted_results
-                
+        
         except Exception as e:
             print(f"Error in face analysis: {str(e)}")
             return []
