@@ -67,3 +67,13 @@ CREATE TABLE Reviews (
     CONSTRAINT reviews_fk_sentiments FOREIGN KEY (sentiment_id)
     REFERENCES Sentiments(sentiment_id)
 );
+
+DROP TABLE IF EXISTS User_Emotions;
+CREATE TABLE User_Emotions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    emotion_data JSON,
+    file LONGBLOB,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES user_data(id)
+);

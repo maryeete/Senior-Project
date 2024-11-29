@@ -18,6 +18,9 @@ import warnings
 from deepface import DeepFace
 import tensorflow as tf
 import shutil
+import mysql.connector
+import json
+from secret import db_host, db_user, db_password, db_database  # Importing MySQL DB credentials from secret.py
 warnings.filterwarnings('ignore')
 
 video = Blueprint(
@@ -207,6 +210,37 @@ class EmotionAnalyzer:
             self.audio_model = None
             self.scaler = None
 
+    def store_image_emotion_data(self, user_id, file, emotion_data):
+        """Store the emotion data along with the file in the database."""
+        try:
+            # Establish DB connection
+            conn = mysql.connector.connect(
+                host=db_host,
+                user=db_user,
+                password=db_password,
+                database=db_database
+            )
+            cursor = conn.cursor()
+            
+            # Convert emotion_data to JSON format
+            emotion_data_json = json.dumps(emotion_data)
+            
+            # Prepare the insert statement
+            query = """
+                INSERT INTO user_emotions (user_id, emotion_data, file)
+                VALUES (%s, %s, %s)
+            """
+            
+            # Execute the query
+            cursor.execute(query, (user_id, emotion_data_json, file))
+            conn.commit()
+            
+            # Close the connection
+            cursor.close()
+            conn.close()
+        except mysql.connector.Error as e:
+            print(f"Error storing emotion data: {str(e)}")
+            
     def analyze_image(self, image):
         """Image analysis with reliable face detection"""
         try:
@@ -253,6 +287,13 @@ class EmotionAnalyzer:
                     ]
                 })
             
+            # Store the image (as a LONGBLOB) and emotion data in the database
+            # Convert image to bytes
+            _, img_bytes = cv2.imencode('.jpg', image)
+            img_blob = img_bytes.tobytes()
+            
+            # Store emotion data and file in the database
+            self.store_image_emotion_data(current_user.id, img_blob, formatted_results)
             return formatted_results
                 
         except Exception as e:

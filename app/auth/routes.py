@@ -139,7 +139,7 @@ def handle_login(form):
     try:
         if user_data and check_password_hash(user_data['password'], password):
             # Create a User object and log in the user
-            user = User(user_data['user_id'], user_data['full_name'], user_data['email'], user_data['username'])
+            user = User(user_data['id'], user_data['full_name'], user_data['email'], user_data['username'])
             login_user(user)  # Use Flask-Login's login_user
             return redirect(url_for("video.index"))  # Redirect to index page upon successful login
         elif user_data:
