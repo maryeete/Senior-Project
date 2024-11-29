@@ -39,7 +39,7 @@ To execute (Mac/Linux):
 ```
 python3 main.py
 ```
-
+<br>
 
 ## To-Do
 
