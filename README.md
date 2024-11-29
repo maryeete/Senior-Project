@@ -26,6 +26,7 @@ db_user = 'root'
 db_password = 'your_password_here'
 db_database = 'Senior_Project'
 ```
+<br>
 
 ## Run Application
 To execute (Windows): 
