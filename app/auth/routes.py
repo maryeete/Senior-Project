@@ -30,12 +30,9 @@ from werkzeug.utils import secure_filename
 from flask_login import login_user, logout_user, login_required, current_user
 import re
 import mysql.connector
-import os
 from secret import db_host, db_user, db_password, db_database  # Importing MySQL DB credentials from secret.py
 from app import User
 from flask import Blueprint, render_template, Response
-import cv2
-from fer import FER
 
 
 auth = Blueprint('auth', __name__)
