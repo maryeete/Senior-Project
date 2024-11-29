@@ -1,171 +1,887 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="index.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Include Chart.js -->
+    <title>Emotion Analysis Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --success-color: #16a34a;
+            --error-color: #dc2626;
+            --background-color: #f1f5f9;
+            --card-background: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+            --hover-color: #1d4ed8;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-color);
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+
+        .header {
+            background: var(--card-background);
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .analysis-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            padding: 0 2rem;
+        }
+
+        .analysis-button {
+            background: var(--card-background);
+            border: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .analysis-button:hover {
+            transform: translateY(-2px);
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .analysis-button.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .analysis-button i {
+            font-size: 1.25rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .section {
+            display: none;
+            background: var(--card-background);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h2 {
+            margin: 0 0 1.5rem 0;
+            font-size: 1.25rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        h2::before {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 1.25rem;
+            background: var(--primary-color);
+            border-radius: 2px;
+        }
+
+        select, input[type="file"] {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+            color: var(--text-primary);
+            background: var(--card-background);
+        }
+
+        select:focus, input[type="file"]:focus {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 2px;
+        }
+
+        button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            font-size: 0.875rem;
+        }
+
+        button:hover {
+            background: var(--hover-color);
+        }
+
+        button:disabled {
+            background: var(--text-secondary);
+            cursor: not-allowed;
+        }
+
+        #videoFeed {
+            width: 100%;
+            border-radius: 8px;
+            margin-top: 1rem;
+            background: var(--background-color);
+        }
+
+        .emotion-card {
+            background: var(--card-background);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .dominant-emotion {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .emotion-bar-container {
+            margin: 0.75rem 0;
+        }
+
+        .emotion-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .emotion-bar {
+            height: 8px;
+            background: var(--background-color);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .emotion-bar-fill {
+            background: var(--primary-color);
+            height: 100%;
+            transition: width 0.3s ease;
+            border-radius: 4px;
+        }
+
+        .error-message {
+            background: #fef2f2;
+            border: 1px solid #fee2e2;
+            color: var(--error-color);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            font-size: 0.875rem;
+        }
+
+        .error-message ul {
+            margin: 0.5rem 0 0 0;
+            padding-left: 1.5rem;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .results-container {
+            margin-top: 1rem;
+            background: var(--background-color);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+                padding: 1rem;
+            }
+
+            .section {
+                padding: 1rem;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+        }
+
+        .recording-indicator {
+            margin-top: 1rem;
+            padding: 0.5rem 1rem;
+            background: #fee2e2;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #dc2626;
+            font-weight: 500;
+        }
+
+        .recording-dot {
+            width: 10px;
+            height: 10px;
+            background: #dc2626;
+            border-radius: 50%;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .control-button,
+        .file-upload label.control-button {
+            width: 160px;
+            height: 45px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.875rem;
+            text-align: center;
+            margin: 0;
+        }
+
+        .control-button:hover,
+        .file-upload label.control-button:hover {
+            background: var(--hover-color);
+            transform: translateY(-1px);
+        }
+
+        .control-button.recording {
+            background: var(--error-color);
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-upload {
+            display: flex;
+            align-items: center;
+        }
+
+        .file-name {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-left: 0.5rem;
+        }
+
+        .audio-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .loading {
+            padding: 1rem;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .error-message {
+            padding: 1rem;
+            color: var(--error-color);
+            background-color: #fee2e2;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <header class="bg-primary text-white p-3">
-        <div class="container d-flex justify-content-between align-items-center">
-            <h1 class="h4">Welcome, {{ name }}!</h1>
-            <nav>
-                <ul class="nav">
-                    <li class="nav-item"><a class="nav-link text-white" href="{{ url_for('auth.logout') }}">Logout</a></li>
-                    <li class="nav-item"><a class="nav-link text-white" href="#">Dashboard</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
-    
-    <main class="container mt-4">
-        <h2 class="card-title">Your Sentiment Analysis Dashboard</h2>
-        <p>Here you can view your submitted reviews and their sentiment analysis results.</p>
+    <div class="header">
+        <h1>Emotion Analysis Dashboard</h1>
+    </div>
 
-        <div class="mb-4">
-            <ul class="nav nav-pills">
-                <li class="nav-item">
-                    <a class="nav-link active" href="?section=text">Text</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="?section=audio">Audio</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="?section=overall">Overall</a>
-                </li>
-            </ul>
-        </div>
+    <div class="analysis-buttons">
+        <button class="analysis-button" onclick="showSection('video-section')">
+            <i class="fas fa-video"></i>
+            Video Analysis
+        </button>
+        <button class="analysis-button" onclick="showSection('audio-section')">
+            <i class="fas fa-microphone"></i>
+            Audio Analysis
+        </button>
+        <button class="analysis-button" onclick="showSection('image-section')">
+            <i class="fas fa-image"></i>
+            Image Analysis
+        </button>
+    </div>
 
-        <!-- Text Sentiment Analysis Section -->
-        <div id="text-sentiment" style="display: block;">
-            <h3>Text Reviews Sentiment</h3>
-            <div class="row">
-                {% if reviews %}
-                    {% for review in reviews %}
-                        <div class="col-md-4 mb-4">
-                            <div class="card review-card">
-                                <div class="card-body">
-                                    <p><strong>Review ID:</strong> {{ review.review_id }}</p>
-                                    <p><strong>Rating:</strong> {{ review.rating }}</p>
-                                    <p><strong>Review:</strong> {{ review.review_text[:100] }}{% if review.review_text|length > 100 %}...{% endif %}</p>
-                                    <p><strong>Sentiment ID:</strong> {{ review.sentiment_id }}</p>
-                                </div>
-                            </div>
-                        </div>
-                    {% endfor %}
-                {% else %}
-                    <div class="col-md-12">
-                        <div class="alert alert-warning">No reviews found.</div>
-                    </div>
-                {% endif %}
+    <div class="container">
+        <!-- Video Analysis Section -->
+        <div id="video-section" class="section">
+            <h2>Video Analysis</h2>
+            <select id="cameraSelect">
+                <option value="">Loading cameras...</option>
+            </select>
+            <div class="button-group">
+                <button onclick="startVideo()">Start Video</button>
+                <button onclick="stopVideo()">Stop Video</button>
             </div>
+            <img id="videoFeed" style="display: none;">
         </div>
 
-        <!-- Audio Sentiment Analysis Section -->
-        <div id="audio-sentiment" style="display: none;">
-            <h3>Audio Reviews Sentiment</h3>
-            <div class="row mb-4">
-                <div class="col-md-12">
-                    <form action="{{ url_for('auth.upload_audio') }}" method="POST" enctype="multipart/form-data">
-                        <div class="form-group">
-                            <label for="audio_file">Upload Audio File:</label>
-                            <input type="file" class="form-control-file" id="audio_file" name="audio_file" accept="audio/*" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Upload</button>
-                    </form>
+        <!-- Audio Analysis Section -->
+        <div id="audio-section" class="section">
+            <h2>Audio Analysis</h2>
+            <select id="microphoneSelect">
+                <option value="">Loading microphones...</option>
+            </select>
+            <div class="audio-controls">
+                <button id="recordingButton" class="control-button">Start Recording</button>
+                <div class="file-upload">
+                    <input type="file" id="audioFileInput" accept="audio/*" class="file-input">
+                    <label for="audioFileInput" class="control-button">Choose Audio File</label>
+                    <span id="fileName" class="file-name"></span>
                 </div>
             </div>
-            <div class="row">
-                {% if audio_files %}
-                    {% for audio in audio_files %}
-                        <div class="col-md-4 mb-4">
-                            <div class="card review-card">
-                                <div class="card-body">
-                                    <p><strong>Audio File:</strong> {{ audio }}</p>
-                                    <audio controls>
-                                        <source src="{{ url_for('static', filename='uploads/' ~ audio) }}" type="audio/mpeg">
-                                        Your browser does not support the audio element.
-                                    </audio>                                    
-                                </div>
-                            </div>
-                        </div>
-                    {% endfor %}
-                {% else %}
-                    <div class="col-md-12">
-                        <div class="alert alert-warning">No audio files found.</div>
-                    </div>
-                {% endif %}
+            <div id="recordingStatus" style="display: none;">
+                <div class="recording-indicator">
+                    <span class="recording-dot"></span>
+                    Recording: <span id="recordingTimer">00:00</span>
+                </div>
+            </div>
+            <div id="audioResults" class="results-container"></div>
+        </div>
+
+        <!-- Image Analysis Section -->
+        <div id="image-section" class="section">
+            <h2>Image Analysis</h2>
+            <input type="file" id="imageInput" accept="image/*">
+            <button onclick="analyzeImage()">Analyze Image</button>
+            <div id="imageResults" class="results-container">
+                <div id="emotionCards"></div>
             </div>
         </div>
-
-        <!-- Overall Sentiment Analysis Section -->
-        <div id="overall-sentiment" style="display: none;">
-            <h3>Overall Sentiment</h3>
-            <p><strong>Average Review Rating:</strong> {{ average_rating | round(2) }}</p> <!-- Display average rating -->
-            <p><strong>Overall Sentiment:</strong> Test</p>
-
-            <h4>Rating Distribution</h4>
-            <canvas id="ratingChart" width="400" height="200"></canvas> <!-- Chart.js canvas -->
-        </div>
-    </main>
-    
-    <footer class="text-center mt-4 mb-3">
-        <p>&copy; 2024 Sentiment Analysis Project</p>
-    </footer>
-    
-    <!-- jQuery, Popper.js, and Bootstrap JS -->
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    </div>
 
     <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const section = urlParams.get('section') || 'text';
+        function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Remove active class from all buttons
+            document.querySelectorAll('.analysis-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // Show selected section
+            document.getElementById(sectionId).classList.add('active');
+            
+            // Add active class to clicked button
+            const button = Array.from(document.querySelectorAll('.analysis-button'))
+                .find(btn => btn.textContent.toLowerCase().includes(sectionId.split('-')[0]));
+            if (button) button.classList.add('active');
+        }
 
-        document.getElementById('text-sentiment').style.display = section === 'text' ? 'block' : 'none';
-        document.getElementById('audio-sentiment').style.display = section === 'audio' ? 'block' : 'none';
-        document.getElementById('overall-sentiment').style.display = section === 'overall' ? 'block' : 'none';
-        
-        document.querySelectorAll('.nav-link').forEach(link => {
-            if (link.getAttribute('href') === `?section=${section}`) {
-                link.classList.add('active');
-            } else {
-                link.classList.remove('active');
-            }
+        // Show video section by default
+        document.addEventListener('DOMContentLoaded', () => {
+            showSection('video-section');
         });
+    </script>
 
-        // Prepare data for the chart
-        const ratings = [ {% for review in reviews %} {{ review.rating }} {% if not loop.last %}, {% endif %} {% endfor %} ];
-        
-        // Create the chart
-        const ctx = document.getElementById('ratingChart').getContext('2d');
-        const ratingChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: ['1', '2', '3', '4', '5'], // Assuming ratings range from 1 to 5
-                datasets: [{
-                    label: 'Number of Reviews',
-                    data: [
-                        ratings.filter(r => r === 1).length,
-                        ratings.filter(r => r === 2).length,
-                        ratings.filter(r => r === 3).length,
-                        ratings.filter(r => r === 4).length,
-                        ratings.filter(r => r === 5).length
-                    ],
-                    backgroundColor: 'rgba(75, 192, 192, 0.6)',
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    y: {
-                        beginAtZero: true
+    <!-- Keep your existing JavaScript -->
+    <script>
+        // Your existing JavaScript code here
+    </script>
+
+    <!-- Add this right before the closing </body> tag -->
+    <script>
+        // Device loading functions
+        async function loadDevices() {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                
+                // Load cameras
+                const cameras = devices.filter(device => device.kind === 'videoinput');
+                const cameraSelect = document.getElementById('cameraSelect');
+                cameraSelect.innerHTML = cameras.length 
+                    ? cameras.map((camera, idx) => 
+                        `<option value="${idx}">${camera.label || `Camera ${idx + 1}`}</option>`).join('')
+                    : '<option value="">No cameras found</option>';
+
+                // Load microphones
+                const microphones = devices.filter(device => device.kind === 'audioinput');
+                const micSelect = document.getElementById('microphoneSelect');
+                micSelect.innerHTML = microphones.length
+                    ? microphones.map((mic, idx) => 
+                        `<option value="${idx}">${mic.label || `Microphone ${idx + 1}`}</option>`).join('')
+                    : '<option value="">No microphones found</option>';
+            } catch (error) {
+                console.error('Error loading devices:', error);
+            }
+        }
+
+        // Request permissions and load devices
+        async function initialize() {
+            try {
+                // Request camera and microphone permissions
+                await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                await loadDevices();
+            } catch (error) {
+                console.error('Error initializing:', error);
+            }
+        }
+
+        // Video functions
+        async function startVideo() {
+            const cameraId = document.getElementById('cameraSelect').value;
+            const videoFeed = document.getElementById('videoFeed');
+            
+            try {
+                const response = await fetch('/start_video', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ camera_id: cameraId })
+                });
+                
+                const data = await response.json();
+                if (data.stream_url) {
+                    videoFeed.src = data.stream_url;
+                    videoFeed.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error starting video:', error);
+            }
+        }
+
+        function stopVideo() {
+            const videoFeed = document.getElementById('videoFeed');
+            videoFeed.src = '';
+            videoFeed.style.display = 'none';
+            
+            fetch('/stop_video', { method: 'POST' })
+                .catch(error => console.error('Error stopping video:', error));
+        }
+
+        // Image analysis functions
+        function analyzeImage() {
+            const fileInput = document.getElementById('imageInput');
+            const file = fileInput.files[0];
+            if (!file) {
+                alert('Please select an image file');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('image', file);
+
+            fetch('/analyze_image', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                const emotionCards = document.getElementById('emotionCards');
+                if (data.results && data.results.length > 0) {
+                    emotionCards.innerHTML = data.results.map(result => `
+                        <div class="emotion-card">
+                            <div class="dominant-emotion">
+                                <h4>Primary Emotion</h4>
+                                <div class="emotion-bar-container">
+                                    <div class="emotion-label">
+                                        <span>${result.dominant_emotion.name}</span>
+                                        <span>${result.dominant_emotion.confidence}%</span>
+                                    </div>
+                                    <div class="emotion-bar">
+                                        <div class="emotion-bar-fill" style="width: ${result.dominant_emotion.confidence}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            ${result.other_emotions.length ? `
+                                <div class="other-emotions">
+                                    <h4>Other Emotions</h4>
+                                    ${result.other_emotions.map(emotion => `
+                                        <div class="emotion-bar-container">
+                                            <div class="emotion-label">
+                                                <span>${emotion.name}</span>
+                                                <span>${emotion.confidence}%</span>
+                                            </div>
+                                            <div class="emotion-bar">
+                                                <div class="emotion-bar-fill" style="width: ${emotion.confidence}%"></div>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            ` : ''}
+                        </div>
+                    `).join('');
+                } else {
+                    emotionCards.innerHTML = `
+                        <div class="error-message">
+                            <p>${data.message || 'No emotions detected'}</p>
+                            ${data.suggestions ? `
+                                <ul>
+                                    ${data.suggestions.map(suggestion => `<li>${suggestion}</li>`).join('')}
+                                </ul>
+                            ` : ''}
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('emotionCards').innerHTML = 
+                    '<div class="error-message">Error analyzing image</div>';
+            });
+        }
+
+        // Add these variables at the top of your script section
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let recordingTimer = null;
+        let recordingStartTime = null;
+        let isRecording = false;
+
+        async function toggleRecording() {
+            const recordButton = document.getElementById('recordingButton');
+            
+            if (!isRecording) {
+                // Start Recording
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        audio: {
+                            echoCancellation: true,
+                            noiseSuppression: true,
+                            sampleRate: 22050
+                        }
+                    });
+                    
+                    // Try different MIME types in order of preference
+                    const mimeTypes = [
+                        'audio/webm',
+                        'audio/webm;codecs=opus',
+                        'audio/ogg;codecs=opus',
+                        'audio/mp4',
+                        'audio/aac',
+                        'audio/wav'
+                    ];
+                    
+                    let selectedMimeType = null;
+                    
+                    // Find the first supported MIME type
+                    for (const mimeType of mimeTypes) {
+                        if (MediaRecorder.isTypeSupported(mimeType)) {
+                            selectedMimeType = mimeType;
+                            break;
+                        }
                     }
+                    
+                    if (!selectedMimeType) {
+                        throw new Error('No supported MIME type found');
+                    }
+                    
+                    mediaRecorder = new MediaRecorder(stream, {
+                        mimeType: selectedMimeType,
+                        audioBitsPerSecond: 128000
+                    });
+                    
+                    audioChunks = [];
+                    
+                    mediaRecorder.ondataavailable = (event) => {
+                        if (event.data.size > 0) {
+                            audioChunks.push(event.data);
+                        }
+                    };
+                    
+                    mediaRecorder.start(1000);
+                    
+                    // Start the timer
+                    recordingStartTime = Date.now();
+                    const timerDisplay = document.getElementById('recordingTimer');
+                    const recordingStatus = document.getElementById('recordingStatus');
+                    
+                    recordingStatus.style.display = 'block';
+                    recordingTimer = setInterval(() => {
+                        const elapsed = Date.now() - recordingStartTime;
+                        const seconds = Math.floor((elapsed / 1000) % 60).toString().padStart(2, '0');
+                        const minutes = Math.floor((elapsed / 1000 / 60)).toString().padStart(2, '0');
+                        timerDisplay.textContent = `${minutes}:${seconds}`;
+                    }, 1000);
+                    
+                    // Update UI
+                    recordButton.textContent = 'Stop Recording';
+                    recordButton.classList.add('recording');
+                    isRecording = true;
+                    
+                } catch (error) {
+                    console.error('Detailed recording error:', error);
+                    if (error.name === 'NotAllowedError') {
+                        alert('Microphone access was denied. Please allow microphone access in your browser settings.');
+                    } else if (error.name === 'NotFoundError') {
+                        alert('No microphone found. Please connect a microphone and try again.');
+                    } else {
+                        alert(`Error starting recording: ${error.message}`);
+                    }
+                }
+            } else {
+                // Stop Recording
+                try {
+                    mediaRecorder.stop();
+                    
+                    // Stop the timer
+                    if (recordingTimer) {
+                        clearInterval(recordingTimer);
+                        recordingTimer = null;
+                    }
+                    
+                    // Hide recording status
+                    document.getElementById('recordingStatus').style.display = 'none';
+                    
+                    // Process the recording
+                    await new Promise(resolve => {
+                        mediaRecorder.onstop = async () => {
+                            const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                            const formData = new FormData();
+                            formData.append('audio', audioBlob, 'recorded_audio.wav');
+                            
+                            try {
+                                const response = await fetch('/analyze_audio_file', {
+                                    method: 'POST',
+                                    body: formData
+                                });
+                                
+                                const data = await response.json();
+                                
+                                // Display results
+                                const audioResults = document.getElementById('audioResults');
+                                if (data.dominant_emotion && data.all_emotions) {
+                                    audioResults.innerHTML = `
+                                        <div class="emotion-card">
+                                            <div class="analysis-info">
+                                                <span class="file-badge recording-badge">Recorded Audio</span>
+                                                <span class="timestamp">Analyzed at: ${new Date().toLocaleTimeString()}</span>
+                                            </div>
+                                            <div class="dominant-emotion">
+                                                <h4>Primary Emotion</h4>
+                                                <div class="emotion-bar-container">
+                                                    <div class="emotion-label">
+                                                        <span>${data.dominant_emotion.emotion}</span>
+                                                        <span>${data.dominant_emotion.confidence}%</span>
+                                                    </div>
+                                                    <div class="emotion-bar">
+                                                        <div class="emotion-bar-fill" style="width: ${data.dominant_emotion.confidence}%"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="other-emotions">
+                                                <h4>Other Emotions</h4>
+                                                ${Object.entries(data.all_emotions)
+                                                    .filter(([emotion, confidence]) => 
+                                                        emotion !== data.dominant_emotion.emotion && confidence > 10)
+                                                    .sort((a, b) => b[1] - a[1])
+                                                    .slice(0, 3)  // Show top 3 other emotions
+                                                    .map(([emotion, confidence]) => `
+                                                        <div class="emotion-bar-container">
+                                                            <div class="emotion-label">
+                                                                <span>${emotion}</span>
+                                                                <span>${confidence.toFixed(1)}%</span>
+                                                            </div>
+                                                            <div class="emotion-bar">
+                                                                <div class="emotion-bar-fill" style="width: ${confidence}%"></div>
+                                                            </div>
+                                                        </div>
+                                                    `).join('')}
+                                            </div>
+                                        </div>
+                                    `;
+                                } else {
+                                    audioResults.insertAdjacentHTML('afterbegin', `
+                                        <div class="error-message">
+                                            No emotion detected in the recording
+                                        </div>
+                                    `);
+                                }
+                            } catch (error) {
+                                console.error('Error analyzing recording:', error);
+                                document.getElementById('audioResults').innerHTML = `
+                                    <div class="error-message">
+                                        Error analyzing recording
+                                    </div>
+                                `;
+                            }
+                            
+                            resolve();
+                        };
+                    });
+                    
+                    // Clean up
+                    mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                    mediaRecorder = null;
+                    audioChunks = [];
+                    
+                    // Update UI
+                    recordButton.textContent = 'Start Recording';
+                    recordButton.classList.remove('recording');
+                    isRecording = false;
+                    
+                } catch (error) {
+                    console.error('Error stopping recording:', error);
+                    alert('Error stopping recording.');
+                }
+            }
+        }
+
+        // Add event listener to the button
+        document.getElementById('recordingButton').addEventListener('click', toggleRecording);
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initialize);
+
+        // Add this after your existing toggleRecording function
+        document.getElementById('audioFileInput').addEventListener('change', async function(event) {
+            const file = event.target.files[0];
+            const fileNameDisplay = document.getElementById('fileName');
+            const audioResults = document.getElementById('audioResults');
+            
+            if (file) {
+                try {
+                    // Clear previous results
+                    while (audioResults.firstChild) {
+                        audioResults.removeChild(audioResults.firstChild);
+                    }
+                    
+                    fileNameDisplay.textContent = file.name;
+                    
+                    const formData = new FormData();
+                    formData.append('audio', file);
+                    
+                    // Show loading state
+                    audioResults.innerHTML = '<div class="loading">Analyzing audio...</div>';
+                    
+                    const response = await fetch('/analyze_audio_file', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    // Clear loading state
+                    audioResults.innerHTML = '';
+                    
+                    const data = await response.json();
+                    
+                    if (data.error) {
+                        audioResults.innerHTML = `
+                            <div class="error-message">
+                                ${data.error}
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    if (data.dominant_emotion && data.all_emotions) {
+                        audioResults.innerHTML = `
+                            <div class="emotion-card">
+                                <div class="analysis-info">
+                                    <span class="file-badge">Uploaded File: ${file.name}</span>
+                                    <span class="timestamp">Analyzed at: ${new Date().toLocaleTimeString()}</span>
+                                </div>
+                                <div class="dominant-emotion">
+                                    <h4>Primary Emotion</h4>
+                                    <div class="emotion-bar-container">
+                                        <div class="emotion-label">
+                                            <span>${data.dominant_emotion.emotion}</span>
+                                            <span>${data.dominant_emotion.confidence}%</span>
+                                        </div>
+                                        <div class="emotion-bar">
+                                            <div class="emotion-bar-fill" style="width: ${data.dominant_emotion.confidence}%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="other-emotions">
+                                    <h4>Other Emotions</h4>
+                                    ${Object.entries(data.all_emotions)
+                                        .filter(([emotion, confidence]) => 
+                                            emotion !== data.dominant_emotion.emotion && confidence > 10)
+                                        .sort((a, b) => b[1] - a[1])
+                                        .map(([emotion, confidence]) => `
+                                            <div class="emotion-bar-container">
+                                                <div class="emotion-label">
+                                                    <span>${emotion}</span>
+                                                    <span>${confidence.toFixed(1)}%</span>
+                                                </div>
+                                                <div class="emotion-bar">
+                                                    <div class="emotion-bar-fill" style="width: ${confidence}%"></div>
+                                                </div>
+                                            </div>
+                                        `).join('')}
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        audioResults.innerHTML = `
+                            <div class="error-message">
+                                No emotion detected in the uploaded file
+                            </div>
+                        `;
+                    }
+                } catch (error) {
+                    console.error('Error analyzing audio file:', error);
+                    audioResults.innerHTML = `
+                        <div class="error-message">
+                            Error analyzing audio file: ${error.message}
+                        </div>
+                    `;
+                } finally {
+                    // Reset file input and filename display
+                    event.target.value = '';
+                    fileNameDisplay.textContent = '';
                 }
             }
         });

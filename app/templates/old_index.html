@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="index.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Include Chart.js -->
+</head>
+<body>
+    <header class="bg-primary text-white p-3">
+        <div class="container d-flex justify-content-between align-items-center">
+            <h1 class="h4">Welcome, {{ name }}!</h1>
+            <nav>
+                <ul class="nav">
+                    <li class="nav-item"><a class="nav-link text-white" href="{{ url_for('auth.logout') }}">Logout</a></li>
+                    <li class="nav-item"><a class="nav-link text-white" href="#">Dashboard</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+    
+    <main class="container mt-4">
+        <h2 class="card-title">Your Sentiment Analysis Dashboard</h2>
+        <p>Here you can view your submitted reviews and their sentiment analysis results.</p>
+
+        <div class="mb-4">
+            <ul class="nav nav-pills">
+                <li class="nav-item">
+                    <a class="nav-link active" href="?section=text">Text</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="?section=audio">Audio</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="?section=overall">Overall</a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Text Sentiment Analysis Section -->
+        <div id="text-sentiment" style="display: block;">
+            <h3>Text Reviews Sentiment</h3>
+            <div class="row">
+                {% if reviews %}
+                    {% for review in reviews %}
+                        <div class="col-md-4 mb-4">
+                            <div class="card review-card">
+                                <div class="card-body">
+                                    <p><strong>Review ID:</strong> {{ review.review_id }}</p>
+                                    <p><strong>Rating:</strong> {{ review.rating }}</p>
+                                    <p><strong>Review:</strong> {{ review.review_text[:100] }}{% if review.review_text|length > 100 %}...{% endif %}</p>
+                                    <p><strong>Sentiment ID:</strong> {{ review.sentiment_id }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="col-md-12">
+                        <div class="alert alert-warning">No reviews found.</div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Audio Sentiment Analysis Section -->
+        <div id="audio-sentiment" style="display: none;">
+            <h3>Audio Reviews Sentiment</h3>
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <form action="{{ url_for('auth.upload_audio') }}" method="POST" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="audio_file">Upload Audio File:</label>
+                            <input type="file" class="form-control-file" id="audio_file" name="audio_file" accept="audio/*" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Upload</button>
+                    </form>
+                </div>
+            </div>
+            <div class="row">
+                {% if audio_files %}
+                    {% for audio in audio_files %}
+                        <div class="col-md-4 mb-4">
+                            <div class="card review-card">
+                                <div class="card-body">
+                                    <p><strong>Audio File:</strong> {{ audio }}</p>
+                                    <audio controls>
+                                        <source src="{{ url_for('static', filename='uploads/' ~ audio) }}" type="audio/mpeg">
+                                        Your browser does not support the audio element.
+                                    </audio>                                    
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="col-md-12">
+                        <div class="alert alert-warning">No audio files found.</div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Overall Sentiment Analysis Section -->
+        <div id="overall-sentiment" style="display: none;">
+            <h3>Overall Sentiment</h3>
+            <p><strong>Average Review Rating:</strong> {{ average_rating | round(2) }}</p> <!-- Display average rating -->
+            <p><strong>Overall Sentiment:</strong> Test</p>
+
+            <h4>Rating Distribution</h4>
+            <canvas id="ratingChart" width="400" height="200"></canvas> <!-- Chart.js canvas -->
+        </div>
+    </main>
+    
+    <footer class="text-center mt-4 mb-3">
+        <p>&copy; 2024 Sentiment Analysis Project</p>
+    </footer>
+    
+    <!-- jQuery, Popper.js, and Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const section = urlParams.get('section') || 'text';
+
+        document.getElementById('text-sentiment').style.display = section === 'text' ? 'block' : 'none';
+        document.getElementById('audio-sentiment').style.display = section === 'audio' ? 'block' : 'none';
+        document.getElementById('overall-sentiment').style.display = section === 'overall' ? 'block' : 'none';
+        
+        document.querySelectorAll('.nav-link').forEach(link => {
+            if (link.getAttribute('href') === `?section=${section}`) {
+                link.classList.add('active');
+            } else {
+                link.classList.remove('active');
+            }
+        });
+
+        // Prepare data for the chart
+        const ratings = [ {% for review in reviews %} {{ review.rating }} {% if not loop.last %}, {% endif %} {% endfor %} ];
+        
+        // Create the chart
+        const ctx = document.getElementById('ratingChart').getContext('2d');
+        const ratingChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['1', '2', '3', '4', '5'], // Assuming ratings range from 1 to 5
+                datasets: [{
+                    label: 'Number of Reviews',
+                    data: [
+                        ratings.filter(r => r === 1).length,
+                        ratings.filter(r => r === 2).length,
+                        ratings.filter(r => r === 3).length,
+                        ratings.filter(r => r === 4).length,
+                        ratings.filter(r => r === 5).length
+                    ],
+                    backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

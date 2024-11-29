@@ -50,6 +50,8 @@ def create_app():
         return User.get_user(user_id)
 
     from app.auth.routes import auth
+    from app.video.video import video
     app.register_blueprint(auth)
-
+    app.register_blueprint(video)
+    
     return app

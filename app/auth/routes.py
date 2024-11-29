@@ -183,7 +183,7 @@ def login():
     return render_template('login.html')
 
 
-@auth.route("/")
+@auth.route("/old")
 @login_required
 def index():
     """
@@ -215,7 +215,7 @@ def index():
     cursor.close()
     connection.close()
 
-    return render_template('index.html', name=current_user.full_name, reviews=user_reviews, audio_files=audio_files, average_rating=average_rating)
+    return render_template('old_index.html', name=current_user.full_name, reviews=user_reviews, audio_files=audio_files, average_rating=average_rating)
 
 
 @auth.route("/logout")
