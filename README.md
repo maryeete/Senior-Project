@@ -2,15 +2,18 @@
 
 ## Setup
 
+
 Install all dependencies: 
 ```
 pip install -r requirements.txt
 ```
 
+
 Setup MySQL database instance: 
 ```
 cd database_files
 ```
+
 
 Create secret.py file with the accompanying info:
 ```
@@ -24,10 +27,12 @@ db_database = 'Senior_Project'
 python3 setup.py
 ```
 
+
 To execute (Windows): 
 ```
 python main.py
 ```
+
 
 To execute (Mac/Linux): 
 ```
