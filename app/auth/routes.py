@@ -141,7 +141,7 @@ def handle_login(form):
             # Create a User object and log in the user
             user = User(user_data['user_id'], user_data['full_name'], user_data['email'], user_data['username'])
             login_user(user)  # Use Flask-Login's login_user
-            return redirect(url_for("auth.index"))  # Redirect to index page upon successful login
+            return redirect(url_for("video.index"))  # Redirect to index page upon successful login
         elif user_data:
             flash('Incorrect password.', category='error')
         else:
@@ -183,39 +183,39 @@ def login():
     return render_template('login.html')
 
 
-@auth.route("/old")
-@login_required
-def index():
-    """
-    Renders the index page, accessible only to logged-in users.
+# @auth.route("/old")
+# @login_required
+# def index():
+#     """
+#     Renders the index page, accessible only to logged-in users.
     
-    Returns:
-        Response: Renders the 'index.html' template with the user's name, reviews, and uploaded audio files.
-    """
-    user_id = current_user.id
+#     Returns:
+#         Response: Renders the 'index.html' template with the user's name, reviews, and uploaded audio files.
+#     """
+#     user_id = current_user.id
     
-    # Connect to the MySQL database
-    connection = create_db_connection()
-    cursor = connection.cursor(dictionary=True)  # Use dictionary=True for results as dictionaries
+#     # Connect to the MySQL database
+#     connection = create_db_connection()
+#     cursor = connection.cursor(dictionary=True)  # Use dictionary=True for results as dictionaries
 
-    # Query to get reviews for the logged-in user
-    cursor.execute("SELECT review_id, rating, review_text, sentiment_id FROM Reviews WHERE user_id = %s", (user_id,))
-    user_reviews = cursor.fetchall()
+#     # Query to get reviews for the logged-in user
+#     cursor.execute("SELECT review_id, rating, review_text, sentiment_id FROM Reviews WHERE user_id = %s", (user_id,))
+#     user_reviews = cursor.fetchall()
 
-    # Calculate the average rating
-    if user_reviews:
-        average_rating = sum(review['rating'] for review in user_reviews) / len(user_reviews)
-    else:
-        average_rating = 0  # Default to 0 if no reviews are found
+#     # Calculate the average rating
+#     if user_reviews:
+#         average_rating = sum(review['rating'] for review in user_reviews) / len(user_reviews)
+#     else:
+#         average_rating = 0  # Default to 0 if no reviews are found
 
-    # List uploaded audio files
-    audio_directory = 'app/static/uploads/'  # Adjust this path based on your structure
-    audio_files = [f for f in os.listdir(audio_directory) if os.path.isfile(os.path.join(audio_directory, f))]
+#     # List uploaded audio files
+#     audio_directory = 'app/static/uploads/'  # Adjust this path based on your structure
+#     audio_files = [f for f in os.listdir(audio_directory) if os.path.isfile(os.path.join(audio_directory, f))]
 
-    cursor.close()
-    connection.close()
+#     cursor.close()
+#     connection.close()
 
-    return render_template('old_index.html', name=current_user.full_name, reviews=user_reviews, audio_files=audio_files, average_rating=average_rating)
+#     return render_template('old_index.html', name=current_user.full_name, reviews=user_reviews, audio_files=audio_files, average_rating=average_rating)
 
 
 @auth.route("/logout")
@@ -225,85 +225,3 @@ def logout():
     """
     logout_user()
     return redirect(url_for("auth.login"))
-
-
-@auth.route("/upload_audio", methods=["POST"])
-@login_required
-def upload_audio():
-    """
-    User-uploaded audio file stored in /uploads.
-    """
-    if 'audio_file' not in request.files:
-        flash('No file part', 'error')
-        return redirect(url_for('auth.index'))
-
-    file = request.files['audio_file']
-    if file.filename == '':
-        flash('No selected file', 'error')
-        return redirect(url_for('auth.index'))
-
-    try:
-        # Ensure the uploads directory exists
-        os.makedirs('app/static/uploads', exist_ok=True)
-        
-        # Use secure_filename to avoid issues with special characters
-        filename = secure_filename(file.filename)
-        file.save(f'app/static/uploads/{filename}')
-        flash('Audio file uploaded successfully!', 'success')
-    except Exception as e:
-        flash(f'Failed to upload audio file: {str(e)}', 'error')
-
-    return redirect(url_for('auth.index') + '?section=audio')
-
-
-# Initialize the emotion detector outside the function for efficiency
-emotion_detector = FER(mtcnn=True)
-
-
-def generate_frames():
-    cap = cv2.VideoCapture(0)  # Open the webcam
-    
-    while True:
-        success, frame = cap.read()  # Read the frame
-        
-        if not success:
-            break
-        
-        # Detect emotions in the frame
-        result = emotion_detector.detect_emotions(frame)
-        
-        if result:
-            face = result[0]
-            emotions = face['emotions']
-            x, y, w, h = face['box']
-            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
-            dominant_emotion = max(emotions.items(), key=lambda x: x[1])[0]
-            confidence = emotions[dominant_emotion]
-            text = f"{dominant_emotion}: {confidence:.2f}"
-            cv2.putText(frame, text, (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 
-                        0.9, (0, 255, 0), 2)
-
-            # Print emotions to terminal
-            print("\nDetected emotions:")
-            for emotion, score in emotions.items():
-                print(f"{emotion}: {score:.2f}")
-        
-        # Encode the frame in JPEG format
-        ret, buffer = cv2.imencode('.jpg', frame)
-        frame = buffer.tobytes()
-
-        # Yield the frame to display
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-    
-    cap.release()
-
-
-@auth.route('/analyze_video')
-def analyze_video():
-    return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
-
-
-@auth.route('/video_analysis_page')
-def emotion_analysis_page():
-    return render_template('analyze_video.html')

@@ -343,6 +343,7 @@
 <body>
     <div class="header">
         <h1>Emotion Analysis Dashboard</h1>
+        <h3 class="h4">Welcome, {{ name }}!</h3>
     </div>
 
     <div class="analysis-buttons">
@@ -357,6 +358,10 @@
         <button class="analysis-button" onclick="showSection('image-section')">
             <i class="fas fa-image"></i>
             Image Analysis
+        </button>
+        <button class="analysis-button" onclick="window.location.href='/logout';">
+            <i class="fas fa-sign-out-alt"></i>
+            Logout
         </button>
     </div>
 
@@ -406,6 +411,7 @@
                 <div id="emotionCards"></div>
             </div>
         </div>
+        
     </div>
 
     <script>

@@ -1,5 +1,6 @@
 from flask import Blueprint, Flask, render_template, request, jsonify, Response
 import cv2
+from flask_login import current_user, login_required
 import numpy as np
 import librosa
 import sounddevice as sd
@@ -389,8 +390,9 @@ combined_audio_data = []
 combined_stream = None
 
 @video.route('/')
+@login_required
 def index():
-    return render_template('index.html')
+    return render_template('index.html', name=current_user.full_name)
 
 @video.route('/get_devices')
 def get_devices():
