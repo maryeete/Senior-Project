@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f7fa;
+        }
+        .container {
+            width: 90%;
+            margin: 50px auto;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        .chart-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+        canvas {
+            width: 400px !important;
+            height: 400px !important;
+        }
+        select {
+            margin-top: 20px;
+            padding: 10px;
+            font-size: 16px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        /* Navbar styles */
+        .navbar {
+            background-color: #f4f7fa; /* Matches page background color */
+            padding: 10px;
+            text-align: center;
+            border-bottom: 1px solid #ddd; /* Light border to separate navbar */
+        }
+
+        .navbar a, .navbar form button {
+            color: #333;
+            padding: 10px 20px;
+            margin: 0 10px;
+            text-decoration: none;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .navbar a:hover, .navbar form button:hover {
+            background-color: #e2e6ea; /* Slightly darker gray for hover */
+        }
+
+        .navbar form button {
+            background: none;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <!-- Switch order: Analysis first, then Logout -->
+        <a href="/">
+            <i class="fas fa-chart-line"></i> Analysis
+        </a>
+        <form action="/logout" method="POST" style="display: inline;">
+            <button type="submit" class="logout-button">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </form>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>User Emotion Dashboard</h1>
+            <p>View your emotion data across various media.</p>
+
+            <!-- Filter Dropdown -->
+            <form method="POST" action="/dashboard">
+                <label for="file_type">Filter by file type:</label>
+                <select name="file_type" id="file_type" onchange="this.form.submit()">
+                    <option value="all" {% if file_type == 'all' %}selected{% endif %}>Overall</option>
+                    <option value="image" {% if file_type == 'image' %}selected{% endif %}>Image</option>
+                    <option value="audio" {% if file_type == 'audio' %}selected{% endif %}>Audio</option>
+                    <option value="video" {% if file_type == 'video' %}selected{% endif %}>Video</option>
+                </select>
+            </form>
+        </div>
+
+        <div class="chart-container">
+            <div>
+                <h3>Emotion Distribution</h3>
+                <canvas id="pieChart"></canvas>
+            </div>
+            <div>
+                <h3>Emotion Confidence (Bar)</h3>
+                <canvas id="barChart"></canvas>
+            </div>
+            <div>
+                <h3>Emotion Trend Over Time</h3>
+                <canvas id="lineChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const labels = {{ labels|tojson }};
+        const values = {{ values|tojson }};
+        
+        const pieChart = new Chart(document.getElementById('pieChart'), {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Emotion Distribution',
+                    data: values,
+                    backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#FF9F40', '#4BC0C0'],
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+        
+        const barChart = new Chart(document.getElementById('barChart'), {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Emotion Confidence',
+                    data: values,
+                    backgroundColor: '#36A2EB',
+                    borderColor: '#36A2EB',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+        
+        const lineChart = new Chart(document.getElementById('lineChart'), {
+            type: 'line',
+            data: {
+                labels: labels, // You can adjust this based on time or other categories
+                datasets: [{
+                    label: 'Emotion Trend',
+                    data: values, // Replace with time or trend data
+                    fill: false,
+                    borderColor: '#FF6384',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+        
+    </script>
+    
+</body>
+</html>

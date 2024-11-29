@@ -51,7 +51,9 @@ def create_app():
 
     from app.auth.routes import auth
     from app.video.video import video
+    from app.dashboard.dashboard import dashboard
     app.register_blueprint(auth)
     app.register_blueprint(video)
+    app.register_blueprint(dashboard)
     
     return app
