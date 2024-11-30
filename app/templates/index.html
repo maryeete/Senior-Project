@@ -381,9 +381,9 @@
                 <option value="">Loading cameras...</option>
             </select>
             <div class="button-group">
-                <button onclick="startVideo()">Start Video</button>
-                <button onclick="stopVideo()">Stop Video</button>
-            </div>
+                <button onclick="startVideo(); toggleRecording()">Start Video</button>
+                <button onclick="stopVideo(); toggleRecording()">Stop Video</button>
+            </div>            
             <img id="videoFeed" style="display: none;">
         </div>
 
@@ -599,7 +599,7 @@
 
         // Add these variables at the top of your script section
         let mediaRecorder = null;
-        let audioChunks = [];
+        let videoChunks = [];
         let recordingTimer = null;
         let recordingStartTime = null;
         let isRecording = false;
@@ -611,52 +611,21 @@
                 // Start Recording
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({
-                        audio: {
-                            echoCancellation: true,
-                            noiseSuppression: true,
-                            sampleRate: 22050
-                        }
+                        video: true,
+                        audio: true,
                     });
-                    
-                    // Try different MIME types in order of preference
-                    const mimeTypes = [
-                        'audio/webm',
-                        'audio/webm;codecs=opus',
-                        'audio/ogg;codecs=opus',
-                        'audio/mp4',
-                        'audio/aac',
-                        'audio/wav'
-                    ];
-                    
-                    let selectedMimeType = null;
-                    
-                    // Find the first supported MIME type
-                    for (const mimeType of mimeTypes) {
-                        if (MediaRecorder.isTypeSupported(mimeType)) {
-                            selectedMimeType = mimeType;
-                            break;
-                        }
-                    }
-                    
-                    if (!selectedMimeType) {
-                        throw new Error('No supported MIME type found');
-                    }
-                    
-                    mediaRecorder = new MediaRecorder(stream, {
-                        mimeType: selectedMimeType,
-                        audioBitsPerSecond: 128000
-                    });
-                    
-                    audioChunks = [];
-                    
+                    console.log("a"); 
+                    mediaRecorder = new MediaRecorder(stream);
+                    videoChunks = [];
+                    console.log("b"); 
                     mediaRecorder.ondataavailable = (event) => {
                         if (event.data.size > 0) {
-                            audioChunks.push(event.data);
+                            videoChunks.push(event.data);
                         }
                     };
-                    
+                    console.log("c"); 
                     mediaRecorder.start(1000);
-                    
+
                     // Start the timer
                     recordingStartTime = Date.now();
                     const timerDisplay = document.getElementById('recordingTimer');
@@ -669,21 +638,15 @@
                         const minutes = Math.floor((elapsed / 1000 / 60)).toString().padStart(2, '0');
                         timerDisplay.textContent = `${minutes}:${seconds}`;
                     }, 1000);
-                    
+
                     // Update UI
                     recordButton.textContent = 'Stop Recording';
                     recordButton.classList.add('recording');
                     isRecording = true;
-                    
+
                 } catch (error) {
                     console.error('Detailed recording error:', error);
-                    if (error.name === 'NotAllowedError') {
-                        alert('Microphone access was denied. Please allow microphone access in your browser settings.');
-                    } else if (error.name === 'NotFoundError') {
-                        alert('No microphone found. Please connect a microphone and try again.');
-                    } else {
-                        alert(`Error starting recording: ${error.message}`);
-                    }
+                    alert('Error starting recording: ' + error.message);
                 }
             } else {
                 // Stop Recording
@@ -698,100 +661,53 @@
                     
                     // Hide recording status
                     document.getElementById('recordingStatus').style.display = 'none';
-                    
+
                     // Process the recording
                     await new Promise(resolve => {
                         mediaRecorder.onstop = async () => {
-                            const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                            const videoBlob = new Blob(videoChunks, { type: 'video/webm' });
                             const formData = new FormData();
-                            formData.append('audio', audioBlob, 'recorded_audio.wav');
+                            formData.append('video', videoBlob, 'recorded_video.webm');
                             
                             try {
-                                const response = await fetch('/analyze_audio_file', {
+                                const response = await fetch('/upload_video', {
                                     method: 'POST',
                                     body: formData
                                 });
-                                
+
                                 const data = await response.json();
-                                
-                                // Display results
-                                const audioResults = document.getElementById('audioResults');
-                                if (data.dominant_emotion && data.all_emotions) {
-                                    audioResults.innerHTML = `
-                                        <div class="emotion-card">
-                                            <div class="analysis-info">
-                                                <span class="file-badge recording-badge">Recorded Audio</span>
-                                                <span class="timestamp">Analyzed at: ${new Date().toLocaleTimeString()}</span>
-                                            </div>
-                                            <div class="dominant-emotion">
-                                                <h4>Primary Emotion</h4>
-                                                <div class="emotion-bar-container">
-                                                    <div class="emotion-label">
-                                                        <span>${data.dominant_emotion.emotion}</span>
-                                                        <span>${data.dominant_emotion.confidence}%</span>
-                                                    </div>
-                                                    <div class="emotion-bar">
-                                                        <div class="emotion-bar-fill" style="width: ${data.dominant_emotion.confidence}%"></div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="other-emotions">
-                                                <h4>Other Emotions</h4>
-                                                ${Object.entries(data.all_emotions)
-                                                    .filter(([emotion, confidence]) => 
-                                                        emotion !== data.dominant_emotion.emotion && confidence > 10)
-                                                    .sort((a, b) => b[1] - a[1])
-                                                    .slice(0, 3)  // Show top 3 other emotions
-                                                    .map(([emotion, confidence]) => `
-                                                        <div class="emotion-bar-container">
-                                                            <div class="emotion-label">
-                                                                <span>${emotion}</span>
-                                                                <span>${confidence.toFixed(1)}%</span>
-                                                            </div>
-                                                            <div class="emotion-bar">
-                                                                <div class="emotion-bar-fill" style="width: ${confidence}%"></div>
-                                                            </div>
-                                                        </div>
-                                                    `).join('')}
-                                            </div>
-                                        </div>
-                                    `;
+                                if (data.status === 'success') {
+                                    alert('Video uploaded successfully!');
                                 } else {
-                                    audioResults.insertAdjacentHTML('afterbegin', `
-                                        <div class="error-message">
-                                            No emotion detected in the recording
-                                        </div>
-                                    `);
+                                    alert('Error uploading video: ' + data.error);
                                 }
+
                             } catch (error) {
-                                console.error('Error analyzing recording:', error);
-                                document.getElementById('audioResults').innerHTML = `
-                                    <div class="error-message">
-                                        Error analyzing recording
-                                    </div>
-                                `;
+                                console.error('Error uploading video:', error);
+                                alert('Error uploading video');
                             }
                             
                             resolve();
                         };
                     });
-                    
+
                     // Clean up
                     mediaRecorder.stream.getTracks().forEach(track => track.stop());
                     mediaRecorder = null;
-                    audioChunks = [];
-                    
+                    videoChunks = [];
+
                     // Update UI
                     recordButton.textContent = 'Start Recording';
                     recordButton.classList.remove('recording');
                     isRecording = false;
-                    
+
                 } catch (error) {
                     console.error('Error stopping recording:', error);
                     alert('Error stopping recording.');
                 }
             }
         }
+
 
         // Add event listener to the button
         document.getElementById('recordingButton').addEventListener('click', toggleRecording);

@@ -12,6 +12,8 @@ instance/*
 !instance/.gitignore
 .webassets-cache
 .env
+/uploads/*
+!/uploads/
 
 
 ### Flask.Python Stack ###

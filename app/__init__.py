@@ -40,6 +40,7 @@ def create_app():
     """
     app = Flask(__name__)
     app.config['SECRET_KEY'] = 'test'
+    app.config['UPLOAD_FOLDER'] = 'uploads/'
 
     login_manager = LoginManager()
     login_manager.login_view = "auth.login"

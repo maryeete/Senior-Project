@@ -1,4 +1,4 @@
-from flask import Blueprint, Flask, render_template, request, jsonify, Response
+from flask import Blueprint, Flask, current_app, render_template, request, jsonify, Response
 import cv2
 from flask_login import current_user, login_required
 import numpy as np
@@ -996,6 +996,18 @@ def combined_feed(camera_id):
                    
     return Response(generate(camera_id),
                    mimetype='multipart/x-mixed-replace; boundary=frame')
+
+@video.route('/upload_video', methods=['POST'])
+def upload_video():
+    print('in the function!')
+    video = request.files['video']
+    if video:
+        # Get the upload path from Flask's config
+        upload_path = os.path.join(current_app.config['UPLOAD_FOLDER'], video.filename)
+        video.save(upload_path)
+        return jsonify({"status": "success", "message": "Video uploaded successfully!"}), 200
+    else:
+        return jsonify({"error": "No video file provided"}), 400
 
 @video.route('/analyze_audio_file', methods=['POST'])
 def analyze_audio_file():
