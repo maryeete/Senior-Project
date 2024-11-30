@@ -43,5 +43,5 @@ python3 main.py
 
 ## To-Do
 
-    - Associate users with MySQL Reviews table
+    - Video integration with DB
     

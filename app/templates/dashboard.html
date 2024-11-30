@@ -5,179 +5,209 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f9;
             margin: 0;
             padding: 0;
-            background-color: #f4f7fa;
-        }
-        .container {
-            width: 90%;
-            margin: 50px auto;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 50px;
-        }
-        .chart-container {
-            display: flex;
-            justify-content: space-between;
-            gap: 20px;
-        }
-        canvas {
-            width: 400px !important;
-            height: 400px !important;
-        }
-        select {
-            margin-top: 20px;
-            padding: 10px;
-            font-size: 16px;
-            background-color: #fff;
-            border: 1px solid #ddd;
-            border-radius: 5px;
         }
 
-        /* Navbar styles */
         .navbar {
-            background-color: #f4f7fa; /* Matches page background color */
-            padding: 10px;
-            text-align: center;
-            border-bottom: 1px solid #ddd; /* Light border to separate navbar */
+            background-color: #ffffff; /* Match page background */
+            padding: 10px 30px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: center; /* Center the buttons */
+            align-items: center; /* Vertically center the buttons */
         }
 
-        .navbar a, .navbar form button {
+        .navbar a, .logout-button {
             color: #333;
-            padding: 10px 20px;
-            margin: 0 10px;
             text-decoration: none;
             font-size: 16px;
+            margin: 0 15px; /* Added space between buttons */
+            padding: 8px 12px;
             border-radius: 5px;
-            cursor: pointer;
+            transition: background-color 0.3s ease;
         }
 
-        .navbar a:hover, .navbar form button:hover {
-            background-color: #e2e6ea; /* Slightly darker gray for hover */
+        .navbar a:hover, .logout-button:hover {
+            background-color: #f1f1f1;
         }
 
-        .navbar form button {
-            background: none;
+        .logout-button {
+            background-color: #fff;
             border: none;
-            font-size: 16px;
             cursor: pointer;
+        }
+
+        .dashboard-container {
+            display: flex;
+            flex-direction: column;
+            padding: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .filter-bar {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .filter-bar form select {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .file-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 30px;
+        }
+
+        .file-item {
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            overflow: hidden;
+            background-color: #fff;
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .file-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .file-header p {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 15px;
+        }
+
+        .file-body {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .file-content {
+            width: 100%;
+            height: auto;
+            max-height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .file-footer {
+            font-size: 14px;
+            color: #444;
+        }
+
+        .file-footer ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .file-footer li {
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .file-footer strong {
+            color: #333;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .file-item {
+                padding: 12px;
+            }
+
+            .filter-bar {
+                justify-content: space-between;
+            }
+
+            .filter-bar form select {
+                width: 100%;
+            }
         }
     </style>
 </head>
 <body>
     <div class="navbar">
-        <!-- Switch order: Analysis first, then Logout -->
         <a href="/">
-            <i class="fas fa-chart-line"></i> Analysis
+            <i class="fas fa-search"></i> Analysis
+        </a>
+        <a href="/analytics">
+            <i class="fas fa-chart-line"></i> Analytics
         </a>
         <form action="/logout" method="POST" style="display: inline;">
             <button type="submit" class="logout-button">
                 <i class="fas fa-sign-out-alt"></i> Logout
             </button>
-        </form>
+        </form>        
     </div>
 
-    <div class="container">
-        <div class="header">
-            <h1>User Emotion Dashboard</h1>
-            <p>View your emotion data across various media.</p>
-
-            <!-- Filter Dropdown -->
+    <div class="dashboard-container">
+        <div class="filter-bar">
             <form method="POST" action="/dashboard">
-                <label for="file_type">Filter by file type:</label>
-                <select name="file_type" id="file_type" onchange="this.form.submit()">
-                    <option value="all" {% if file_type == 'all' %}selected{% endif %}>Overall</option>
-                    <option value="image" {% if file_type == 'image' %}selected{% endif %}>Image</option>
-                    <option value="audio" {% if file_type == 'audio' %}selected{% endif %}>Audio</option>
-                    <option value="video" {% if file_type == 'video' %}selected{% endif %}>Video</option>
+                <select name="file_type" onchange="this.form.submit()">
+                    <option value="all" {% if file_type == 'all' %}selected{% endif %}>All</option>
+                    <option value="image" {% if file_type == 'image' %}selected{% endif %}>Images</option>
+                    <option value="video" {% if file_type == 'video' %}selected{% endif %}>Videos</option>
+                    <option value="audio" {% if file_type == 'audio' %}selected{% endif %}>Audios</option>
                 </select>
             </form>
         </div>
 
-        <div class="chart-container">
-            <div>
-                <h3>Emotion Distribution</h3>
-                <canvas id="pieChart"></canvas>
-            </div>
-            <div>
-                <h3>Emotion Confidence (Bar)</h3>
-                <canvas id="barChart"></canvas>
-            </div>
-            <div>
-                <h3>Emotion Trend Over Time</h3>
-                <canvas id="lineChart"></canvas>
-            </div>
+        <div class="file-grid">
+            {% for file in files %}
+                <div class="file-item">
+                    <div class="file-header">
+                        <p>Uploaded: {{ file.created_at }}</p>
+                    </div>
+                    <div class="file-body">
+                        {% if file.file_type == 'image' %}
+                            <img src="{{ file.file_data }}" alt="Image" class="file-content">
+                        {% elif file.file_type == 'audio' %}
+                            <audio controls class="file-content">
+                                <source src="{{ file.file_data }}" type="audio/mpeg">
+                                Your browser does not support the audio element.
+                            </audio>
+                        {% elif file.file_type == 'video' %}
+                            <video controls class="file-content">
+                                <source src="{{ file.file_data }}" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
+                        {% endif %}
+                    </div>
+
+                    <div class="file-footer">
+                        {% if file.dominant_emotion %}
+                            <p><strong>Dominant Emotion:</strong> {{ file.dominant_emotion.name }} ({{ file.dominant_emotion.confidence }}%)</p>
+                        {% endif %}
+                        <ul>
+                            {% for emotion in file.other_emotions %}
+                                <li>{{ emotion.name }}: {{ emotion.confidence }}%</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            {% endfor %}
         </div>
     </div>
-
-    <script>
-        const labels = {{ labels|tojson }};
-        const values = {{ values|tojson }};
-        
-        const pieChart = new Chart(document.getElementById('pieChart'), {
-            type: 'pie',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Emotion Distribution',
-                    data: values,
-                    backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#FF9F40', '#4BC0C0'],
-                    hoverOffset: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false
-            }
-        });
-        
-        const barChart = new Chart(document.getElementById('barChart'), {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Emotion Confidence',
-                    data: values,
-                    backgroundColor: '#36A2EB',
-                    borderColor: '#36A2EB',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
-        
-        const lineChart = new Chart(document.getElementById('lineChart'), {
-            type: 'line',
-            data: {
-                labels: labels, // You can adjust this based on time or other categories
-                datasets: [{
-                    label: 'Emotion Trend',
-                    data: values, // Replace with time or trend data
-                    fill: false,
-                    borderColor: '#FF6384',
-                    tension: 0.1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false
-            }
-        });
-        
-    </script>
-    
 </body>
 </html>

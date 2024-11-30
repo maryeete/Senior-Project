@@ -215,7 +215,7 @@ def login():
 #     return render_template('old_index.html', name=current_user.full_name, reviews=user_reviews, audio_files=audio_files, average_rating=average_rating)
 
 
-@auth.route("/logout")
+@auth.route("/logout", methods=["POST"])
 def logout():
     """
     Logs out the user by clearing the session data and redirects to the login page.

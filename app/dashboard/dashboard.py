@@ -1,7 +1,11 @@
+import os
 from flask import Blueprint, Flask, json, render_template, request, jsonify, Response
 from flask_login import current_user, login_required
 import mysql.connector
 from secret import db_host, db_user, db_password, db_database  # Importing MySQL DB credentials from secret.py
+from werkzeug.utils import secure_filename
+import base64
+from io import BytesIO
 
 dashboard = Blueprint(
     'dashboard',  # Blueprint name
@@ -21,11 +25,11 @@ def create_db_connection():
         host=db_host,
         user=db_user,
         password=db_password,
-        database=db_database
+        database=db_database,
     )
     
-@dashboard.route('/dashboard', methods=['GET', 'POST'])
-def dashboard_route():
+@dashboard.route('/analytics', methods=['GET', 'POST'])
+def analytics():
     file_type = request.form.get('file_type', 'all')  # Default to 'all' (overall sort)
     conn = create_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -64,4 +68,54 @@ def dashboard_route():
     labels = list(emotion_count.keys())
     values = list(emotion_count.values())
 
-    return render_template('dashboard.html', labels=labels, values=values, file_type=file_type)
+    return render_template('analytics.html', labels=labels, values=values, file_type=file_type)
+
+
+@dashboard.route('/dashboard', methods=['GET', 'POST'])
+def dashboard_route():
+    user_id = current_user.id  # Assuming you have a logged-in user
+
+    # Filter by file type if a specific type is selected
+    file_type = request.form.get('file_type', 'all')
+
+    # Fetch data from the database
+    conn = create_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    if file_type == 'all':
+        cursor.execute("SELECT * FROM user_emotions WHERE user_id = %s", (user_id,))
+    else:
+        cursor.execute("SELECT * FROM user_emotions WHERE user_id = %s AND file_type = %s", 
+                       (user_id, file_type))
+
+    files = cursor.fetchall()
+    conn.close()
+
+    # Process the blob data and encode it to base64
+    for file in files:
+        file_data = file['file']
+        file_extension = file['file_type']
+
+        # Encode binary data to base64
+        encoded_file_data = base64.b64encode(file_data).decode('utf-8')
+
+        # Set file type for image, video, or audio
+        file['file_data'] = f"data:{file_extension};base64,{encoded_file_data}"
+
+        # Access the emotion_data field (assuming it's stored as JSON)
+        emotion_data = file.get('emotion_data', '[]')  # Default to an empty list if not available
+        
+        # If it's a JSON string, load it into a list
+        if isinstance(emotion_data, str):
+            file['emotions'] = json.loads(emotion_data)
+        else:
+            file['emotions'] = emotion_data
+
+        # Assuming emotions is a list, take the first item as the main set of emotions
+        if isinstance(file['emotions'], list) and file['emotions']:
+            dominant_emotion = file['emotions'][0].get('dominant_emotion', {})
+            other_emotions = file['emotions'][0].get('other_emotions', [])
+            file['dominant_emotion'] = dominant_emotion
+            file['other_emotions'] = other_emotions
+
+    return render_template('dashboard.html', files=files, file_type=file_type)
