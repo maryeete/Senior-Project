@@ -78,6 +78,7 @@ retina-face==0.0.17
 rich==13.9.4
 scikit-learn==1.5.2
 scipy==1.14.1
+seaborn==0.13.2
 six==1.16.0
 sounddevice==0.5.1
 soundfile==0.12.1
@@ -89,6 +90,7 @@ tensorboard-data-server==0.7.2
 tensorflow==2.18.0
 tensorflow-io-gcs-filesystem==0.37.1
 termcolor==2.5.0
+tf_keras==2.18.0
 threadpoolctl==3.5.0
 torch==2.2.2
 torchvision==0.17.2
@@ -98,6 +100,15 @@ tzdata==2024.2
 urllib3==2.2.3
 Werkzeug==3.1.3
 wrapt==1.16.0
+Flask
+Flask-Cors
+Flask-Login
+Jinja2
+Markdown
+MarkupSafe
+PySocks
+Pygments
+Werkzeug
 absl-py
 astunparse
 audioread
@@ -116,9 +127,6 @@ fer
 ffmpeg
 filelock
 fire
-Flask
-Flask-Cors
-Flask-Login
 flatbuffers
 fonttools
 fsspec
@@ -132,7 +140,6 @@ idna
 imageio
 imageio-ffmpeg
 itsdangerous
-Jinja2
 joblib
 keras
 kiwisolver
@@ -141,9 +148,7 @@ libclang
 librosa
 llvmlite
 lz4
-Markdown
 markdown-it-py
-MarkupSafe
 matplotlib
 mdurl
 ml-dtypes
@@ -168,9 +173,7 @@ pooch
 proglog
 protobuf
 pycparser
-Pygments
 pyparsing
-PySocks
 python-dateutil
 pytz
 requests
@@ -178,6 +181,7 @@ retina-face
 rich
 scikit-learn
 scipy
+seaborn
 six
 sounddevice
 soundfile
@@ -189,6 +193,7 @@ tensorboard-data-server
 tensorflow
 tensorflow-io-gcs-filesystem
 termcolor
+tf_keras
 threadpoolctl
 torch
 torchvision
@@ -196,5 +201,4 @@ tqdm
 typing_extensions
 tzdata
 urllib3
-Werkzeug
 wrapt
