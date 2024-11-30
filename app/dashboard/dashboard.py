@@ -46,29 +46,39 @@ def analytics():
     for data in emotions_data:
         try:
             emotion_json = json.loads(data['emotion_data'])
-            if isinstance(emotion_json, list):
+            
+            # Normalize the emotion data for both formats
+            if isinstance(emotion_json, list):  # When data is in list format
                 for emotion in emotion_json:
                     if isinstance(emotion, dict):
+                        # Add dominant emotion
+                        emotions.append(emotion['dominant_emotion']['name'])
+                        
+                        # Add other emotions
                         for other_emotion in emotion.get('other_emotions', []):
-                            emotions.append(other_emotion)
+                            emotions.append(other_emotion['name'])
+            elif isinstance(emotion_json, dict):  # When data is in dictionary format
+                # Add dominant emotion
+                emotions.append(emotion_json['dominant_emotion']['name'])
+                
+                # Add other emotions
+                for other_emotion in emotion_json.get('other_emotions', []):
+                    emotions.append(other_emotion['name'])
+        
         except Exception as e:
             print(f"Error processing emotion data: {e}")
 
-    conn.close()
-
-    emotion_count = {}
+    # Process the data for charts
+    emotion_counts = {}
     for emotion in emotions:
-        name = emotion['name']
-        confidence = emotion['confidence']
-        if name in emotion_count:
-            emotion_count[name] += confidence
-        else:
-            emotion_count[name] = confidence
+        emotion_counts[emotion] = emotion_counts.get(emotion, 0) + 1
 
-    labels = list(emotion_count.keys())
-    values = list(emotion_count.values())
+    chart_data = {
+        "labels": list(emotion_counts.keys()),
+        "data": list(emotion_counts.values())
+    }
 
-    return render_template('analytics.html', labels=labels, values=values, file_type=file_type)
+    return render_template('analytics.html', chart_data=chart_data, selected_file_type=file_type)
 
 @dashboard.route('/dashboard', methods=['GET', 'POST'])
 def dashboard_route():
