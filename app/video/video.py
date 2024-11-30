@@ -299,6 +299,63 @@ class EmotionAnalyzer:
             print(f"Error in face analysis: {str(e)}")
             return []
         
+    def analyze_frames(self, image):
+        """Image analysis with reliable face detection"""
+        try:
+            # Ensure consistent image format
+            if len(image.shape) == 2:
+                image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
+            
+            # Basic preprocessing - avoid excessive processing that might affect detection
+            if image.shape[1] > 1000:  # Only resize if image is too large
+                scale = 1000 / image.shape[1]
+                image = cv2.resize(image, (0, 0), fx=scale, fy=scale)
+            
+            # Use DeepFace with reliable settings
+            results = DeepFace.analyze(
+                image,
+                actions=['emotion'],
+                enforce_detection=False,
+                detector_backend='opencv'  # Revert to opencv for reliability
+            )
+            
+            # Handle single result
+            if isinstance(results, dict):
+                results = [results]
+            
+            # Format results
+            formatted_results = []
+            for face_result in results:
+                emotions = face_result['emotion']
+                # Sort emotions by confidence
+                sorted_emotions = sorted(emotions.items(), key=lambda x: x[1], reverse=True)
+                
+                formatted_results.append({
+                    'dominant_emotion': {
+                        'name': sorted_emotions[0][0].capitalize(),
+                        'confidence': round(sorted_emotions[0][1], 1)
+                    },
+                    'other_emotions': [
+                        {
+                            'name': emotion[0].capitalize(),
+                            'confidence': round(emotion[1], 1)
+                        }
+                        for emotion in sorted_emotions[1:]
+                        if emotion[1] > 5  # Only show emotions with >5% confidence
+                    ]
+                })
+            # Store the image (as a LONGBLOB) and emotion data in the database
+            # Convert image to bytes
+            _, img_bytes = cv2.imencode('.jpg', image)
+            img_blob = img_bytes.tobytes()
+            
+            # Store emotion data and file in the database
+            return formatted_results
+        
+        except Exception as e:
+            print(f"Error in face analysis: {str(e)}")
+            return []
+        
     def analyze_audio(self, audio_path):
         """Analyze emotions in an audio file"""
         try:
@@ -420,7 +477,7 @@ class EmotionAnalyzer:
         """Analyze both video frame and audio data and store the results."""
         try:
             # Analyze video and audio
-            video_results = self.analyze_image(frame)
+            video_results = self.analyze_frames(frame)
             audio_results = self.analyze_realtime_audio(audio_data) if audio_data is not None else None
             
             # Format results for DB storage
@@ -558,6 +615,66 @@ def analyze_image():
         
         # Analyze image
         results = analyzer.analyze_image(image)
+        
+        if not results:
+            return jsonify({
+                "status": "no_face_detected",
+                "message": "No faces detected in the image",
+                "debug_info": {
+                    "image_shape": image.shape if image is not None else None,
+                    "image_type": str(image.dtype) if image is not None else None
+                },
+                "suggestions": [
+                    "Make sure the face is clearly visible",
+                    "Ensure good lighting",
+                    "Try a different angle",
+                    "Make sure the image is not too dark or blurry"
+                ]
+            }), 200
+            
+        return jsonify({
+            "status": "success",
+            "number_of_faces": len(results),
+            "results": results
+        })
+        
+    except Exception as e:
+        print(f"Detailed error in image analysis route: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            "error": "Failed to analyze image",
+            "details": str(e),
+            "suggestions": [
+                "Try uploading a different image",
+                "Make sure the image format is supported (JPG, PNG)",
+                "Ensure the image is not corrupted"
+            ]
+        }), 500
+        
+
+@video.route('/analyze_frames', methods=['POST'])
+def analyze_frames():
+    if 'image' not in request.files:
+        return jsonify({"error": "No image provided"}), 400
+        
+    file = request.files['image']
+    if file.filename == '':
+        return jsonify({"error": "No image selected"}), 400
+        
+    try:
+        # Read image file
+        filestr = file.read()
+        npimg = np.frombuffer(filestr, np.uint8)
+        image = cv2.imdecode(npimg, cv2.IMREAD_COLOR)
+        
+        if image is None:
+            return jsonify({"error": "Failed to decode image"}), 400
+            
+        print(f"Successfully loaded image of shape: {image.shape}")
+        
+        # Analyze image
+        results = analyzer.analyze_frames(image)
         
         if not results:
             return jsonify({
@@ -941,6 +1058,7 @@ def stop_combined():
 
 @video.route('/combined_feed/<int:camera_id>')
 def combined_feed(camera_id):
+    print('running combined')
     def generate(camera_id):
         camera = cv2.VideoCapture(camera_id)
         while True:
@@ -993,21 +1111,92 @@ def combined_feed(camera_id):
                    b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
         
         camera.release()
-                   
+        print(results)
     return Response(generate(camera_id),
                    mimetype='multipart/x-mixed-replace; boundary=frame')
 
 @video.route('/upload_video', methods=['POST'])
 def upload_video():
-    print('in the function!')
-    video = request.files['video']
-    if video:
-        # Get the upload path from Flask's config
-        upload_path = os.path.join(current_app.config['UPLOAD_FOLDER'], video.filename)
-        video.save(upload_path)
-        return jsonify({"status": "success", "message": "Video uploaded successfully!"}), 200
+    video_file = request.files['video']
+    if video_file:
+        # Save the video temporarily to process it
+        upload_path = os.path.join(current_app.config['UPLOAD_FOLDER'], video_file.filename)
+        video_file.save(upload_path)
+
+        # Read the video file as binary data
+        with open(upload_path, 'rb') as f:
+            video_data = f.read()
+
+        cap = cv2.VideoCapture(upload_path)
+        overall_emotions = {}
+
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if not ret:
+                break
+            
+            # Analyze the current frame
+            result = analyzer.analyze_combined_frame(frame)
+
+            # Aggregate emotions for the video
+            if result['video']:
+                for video_result in result['video']:
+                    if 'dominant_emotion' in video_result:
+                        dominant = video_result['dominant_emotion']['name']
+                        confidence = video_result['dominant_emotion']['confidence']
+                        if dominant in overall_emotions:
+                            overall_emotions[dominant]['confidence_sum'] += confidence
+                            overall_emotions[dominant]['count'] += 1
+                        else:
+                            overall_emotions[dominant] = {'confidence_sum': confidence, 'count': 1}
+        
+        cap.release()
+
+        # Compute the overall emotions
+        if overall_emotions:
+            overall_dominant = max(
+                overall_emotions.items(), 
+                key=lambda item: item[1]['confidence_sum'] / item[1]['count']
+            )
+            dominant_emotion = {
+                'name': overall_dominant[0],
+                'confidence': overall_dominant[1]['confidence_sum'] / overall_dominant[1]['count']
+            }
+            other_emotions = [
+                {
+                    'name': emotion,
+                    'confidence': data['confidence_sum'] / data['count']
+                }
+                for emotion, data in overall_emotions.items()
+                if emotion != dominant_emotion['name']
+            ]
+        else:
+            dominant_emotion = None
+            other_emotions = []
+
+        # Store the video binary data along with emotion data
+        emotion_data = {
+            "dominant_emotion": dominant_emotion,
+            "other_emotions": other_emotions
+        }
+        analyzer.store_emotion_data(
+            user_id=current_user.id,
+            emotion_data=emotion_data,
+            file=video_data,  # Store the video as binary
+            file_type="video"
+        )
+
+        return jsonify({
+            "status": "success",
+            "message": "Video processed and analyzed!",
+            "dominant_emotion": dominant_emotion,
+            "other_emotions": other_emotions
+        }), 200
     else:
         return jsonify({"error": "No video file provided"}), 400
+
+
+
 
 @video.route('/analyze_audio_file', methods=['POST'])
 def analyze_audio_file():

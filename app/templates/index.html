@@ -383,7 +383,8 @@
             <div class="button-group">
                 <button onclick="startVideo(); toggleRecording()">Start Video</button>
                 <button onclick="stopVideo(); toggleRecording()">Stop Video</button>
-            </div>            
+            </div>
+            
             <img id="videoFeed" style="display: none;">
         </div>
 
@@ -665,9 +666,9 @@
                     // Process the recording
                     await new Promise(resolve => {
                         mediaRecorder.onstop = async () => {
-                            const videoBlob = new Blob(videoChunks, { type: 'video/webm' });
+                            const videoBlob = new Blob(videoChunks, { type: 'video/mp4' });
                             const formData = new FormData();
-                            formData.append('video', videoBlob, 'recorded_video.webm');
+                            formData.append('video', videoBlob, 'recorded_video.mp4');
                             
                             try {
                                 const response = await fetch('/upload_video', {

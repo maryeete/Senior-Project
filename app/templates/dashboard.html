@@ -198,6 +198,8 @@
                     <div class="file-footer">
                         {% if file.dominant_emotion %}
                             <p><strong>Dominant Emotion:</strong> {{ file.dominant_emotion.name }} ({{ file.dominant_emotion.confidence }}%)</p>
+                        {% else %}
+                            <p>No emotion detected for this file.</p>
                         {% endif %}
                         <ul>
                             {% for emotion in file.other_emotions %}

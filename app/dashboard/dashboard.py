@@ -70,7 +70,6 @@ def analytics():
 
     return render_template('analytics.html', labels=labels, values=values, file_type=file_type)
 
-
 @dashboard.route('/dashboard', methods=['GET', 'POST'])
 def dashboard_route():
     user_id = current_user.id  # Assuming you have a logged-in user
@@ -111,11 +110,23 @@ def dashboard_route():
         else:
             file['emotions'] = emotion_data
 
-        # Assuming emotions is a list, take the first item as the main set of emotions
-        if isinstance(file['emotions'], list) and file['emotions']:
-            dominant_emotion = file['emotions'][0].get('dominant_emotion', {})
-            other_emotions = file['emotions'][0].get('other_emotions', [])
-            file['dominant_emotion'] = dominant_emotion
-            file['other_emotions'] = other_emotions
+        # Normalize the emotion data to ensure consistency
+        # If 'emotions' is a list containing one dictionary, we treat it as such
+        if isinstance(file['emotions'], list) and len(file['emotions']) == 1:
+            # If the list contains a single dictionary
+            file['dominant_emotion'] = file['emotions'][0].get('dominant_emotion', {})
+            file['other_emotions'] = file['emotions'][0].get('other_emotions', [])
+        elif isinstance(file['emotions'], list) and len(file['emotions']) > 1:
+            # If the list contains multiple emotions, extract them
+            file['dominant_emotion'] = file['emotions'][0].get('dominant_emotion', {})
+            file['other_emotions'] = file['emotions'][0].get('other_emotions', [])
+        elif isinstance(file['emotions'], dict):
+            # If emotions are a dictionary, treat it as a list with one item
+            file['dominant_emotion'] = file['emotions'].get('dominant_emotion', {})
+            file['other_emotions'] = file['emotions'].get('other_emotions', [])
+        else:
+            # Handle case where no emotions are available
+            file['dominant_emotion'] = {}
+            file['other_emotions'] = []
 
     return render_template('dashboard.html', files=files, file_type=file_type)
