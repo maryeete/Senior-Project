@@ -1,91 +1,142 @@
-/* login.css */
-
-/* Basic reset */
+/* General Reset */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-/* Body styles */
+/* Fonts and Body Styling */
 body {
-    font-family: Arial, sans-serif;
-    background-color: #f4f4f4;
-    color: #333;
-    padding: 20px;
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(to bottom, #1e1e2f, #2c2c54);
+    color: #fff;
+    overflow: hidden;
+    position: relative;
 }
 
-/* Container for the form */
-form {
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+/* Background Heading Animation */
+.background {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: -1;
+    overflow: hidden;
+    width: 100%;
+    height: 100vh;
+}
+
+.animated-heading {
+    font-size: 5rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.1);
+    animation: move 10s linear infinite;
+}
+
+@keyframes move {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+/* Form Container */
+.container {
     max-width: 400px;
-    margin: auto;
+    margin: 50px auto;
     padding: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
-/* Form labels */
-label {
-    display: block;
-    font-weight: bold;
-    margin-bottom: 5px;
+/* Form Title */
+.form-title {
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 20px;
+    color: #f1f1f1;
 }
 
-/* Form inputs */
-input[type="email"],
-input[type="password"] {
+/* Form Inputs */
+.form-group input {
     width: 100%;
     padding: 10px;
-    margin-bottom: 15px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-}
-
-/* Submit button */
-button[type="submit"] {
-    background-color: #007bff;
-    color: #fff;
-    padding: 10px 15px;
+    margin: 10px 0;
     border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 16px;
+    border-radius: 5px;
+    background: #333;
+    color: #fff;
 }
 
-button[type="submit"]:hover {
-    background-color: #0056b3;
-}
-
-/* Flash messages */
-.flashes {
-    list-style: none;
-    margin: 15px 0;
-    padding: 0;
-}
-
-.flashes li {
+/* Button Styling */
+.btn {
+    width: 100%;
     padding: 10px;
-    border-radius: 4px;
+    margin-top: 20px;
+    background: linear-gradient(90deg, #4ecca3, #3e9cff);
+    border: none;
+    border-radius: 5px;
+    color: #fff;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    background: linear-gradient(90deg, #3e9cff, #4ecca3);
+    transform: scale(1.05);
+}
+
+/* Flash Messages */
+.alert {
+    padding: 10px;
     margin-bottom: 10px;
+    border-radius: 5px;
 }
 
-.flashes .error {
-    background-color: #f8d7da;
-    color: #721c24;
+.alert.error {
+    background: #ff4d4d;
+    color: #fff;
 }
 
-.flashes .success {
-    background-color: #d4edda;
-    color: #155724;
+.alert.success {
+    background: #4dff88;
+    color: #fff;
 }
 
-/* Link styles */
-a {
-    color: #007bff;
+/* Redirect Link */
+.redirect {
+    text-align: center;
+    margin-top: 15px;
+    font-size: 0.9rem;
+}
+
+.redirect a {
+    color: #3e9cff;
     text-decoration: none;
 }
 
-a:hover {
+.redirect a:hover {
     text-decoration: underline;
+}
+/* Ripple Effect */
+.btn {
+    position: relative;
+    overflow: hidden;
+}
+
+.btn .ripple {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 50%;
+    transform: scale(0);
+    animation: ripple-animation 0.6s linear;
+}
+
+@keyframes ripple-animation {
+    to {
+        transform: scale(4);
+        opacity: 0;
+    }
 }

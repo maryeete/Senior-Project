@@ -4,51 +4,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/login.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="container mt-5">
-        <h1 class="text-center">Login</h1>
-        <div class="row justify-content-center">
-            <div class="col-md-6">
-                <form action="{{ url_for('auth.login') }}" method="post">
-                    {% with messages = get_flashed_messages(with_categories=true) %}
-                        {% for category, message in messages %}
-                            {% if category == 'error' %}
-                                <div class="alert alert-danger alter-dismissable fade show" role=alert>
-                                    {{ message }}
-                                    <button type="button" class="close" data-dismiss="alert">
-                                        <span aria-hidden="true">&times;</span>
-                                    </button>
-                                </div>
-                            {% else %}
-                                <div class="alert alert-success alter-dismissable fade show" role=alert>
-                                    {{ message }}
-                                    <button type="button" class="close" data-dismiss="alert">
-                                        <span aria-hidden="true">&times;</span>
-                                    </button>
-                                </div>
-                            {% endif %}
-                        {% endfor %}
-                    {% endwith %}
-                    <div class="form-group">
-                        <label for="email">Email:</label>
-                        <input type="email" id="email" name="email" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="password">Password:</label>
-                        <input type="password" id="password" name="password" class="form-control" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary btn-block">Login</button>
-                </form>
-                <p class="mt-3 text-center">Don't have an account? <a href="{{ url_for('auth.signup') }}">Sign up here</a>.</p>
-            </div>
-        </div>
+    <div class="background">
+        <h1 class="animated-heading">Welcome Back</h1>
+        <div class="overlay"></div>
     </div>
-    
-    <!-- jQuery, Popper.js, and Bootstrap JS -->
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <div class="container">
+        <h2 class="form-title">Login</h2>
+        <form action="{{ url_for('auth.login') }}" method="post">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% for category, message in messages %}
+                    <div class="alert {{ 'error' if category == 'error' else 'success' }}">
+                        {{ message }}
+                        <button type="button" class="close">&times;</button>
+                    </div>
+                {% endfor %}
+            {% endwith %}
+            <div class="form-group">
+                <input type="email" id="email" name="email" placeholder="Email" required>
+            </div>
+            <div class="form-group">
+                <input type="password" id="password" name="password" placeholder="Password" required>
+            </div>
+            <button type="submit" class="btn">Login</button>
+        </form>
+        <p class="redirect">Don't have an account? <a href="{{ url_for('auth.signup') }}">Sign up here</a>.</p>
+    </div>
+    <script src="{{ url_for('static', filename='js/login.js') }}"></script></body>
 </body>
 </html>
