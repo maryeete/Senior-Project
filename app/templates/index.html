@@ -367,10 +367,13 @@
             <i class="fas fa-th"></i>
             Dashboard
         </button>        
-        <button class="analysis-button" onclick="window.location.href='/logout';">
-            <i class="fas fa-sign-out-alt"></i>
-            Logout
-        </button>
+        <form action="/logout" method="POST">
+            <button type="submit" class="analysis-button">
+                <i class="fas fa-sign-out-alt"></i>
+                Logout
+            </button>
+        </form>
+        
     </div>
 
     <div class="container">
