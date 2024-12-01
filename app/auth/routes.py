@@ -143,8 +143,8 @@ def handle_login(form):
             flash('Incorrect password.', category='error')
         else:
             flash('Email does not exist.', category='error')
-    except Exception:
-        flash('An error occurred during login.', category='error')
+    except Exception as e:
+        flash(f'An error occurred during login. {e}', category='error')
     finally:
         cursor.close()
         connection.close()

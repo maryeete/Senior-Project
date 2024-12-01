@@ -8,7 +8,7 @@ USE Senior_Project;
 -- Drop and create the User_Data table
 DROP TABLE IF EXISTS User_Data;
 CREATE TABLE User_Data (
-    user_id          INT AUTO_INCREMENT PRIMARY KEY,  -- INT with auto-increment
+    id          INT AUTO_INCREMENT PRIMARY KEY,  -- INT with auto-increment
     full_name        VARCHAR(150) NOT NULL,
     email            VARCHAR(150) UNIQUE NOT NULL,     -- Unique email
     username         VARCHAR(100) NOT NULL UNIQUE,     -- Unique username
@@ -59,7 +59,7 @@ CREATE TABLE Reviews (
     sentiment_id     INT,  
     
     CONSTRAINT reviews_fk_users FOREIGN KEY (user_id)
-    REFERENCES User_Data(user_id),
+    REFERENCES User_Data(id),
    
     CONSTRAINT reviews_fk_products FOREIGN KEY (product_id)
     REFERENCES Products(product_id),
