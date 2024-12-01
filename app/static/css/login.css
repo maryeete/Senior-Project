@@ -8,46 +8,35 @@
 /* Fonts and Body Styling */
 body {
     font-family: 'Poppins', sans-serif;
-    background: linear-gradient(to bottom, #1e1e2f, #2c2c54);
-    color: #fff;
-    overflow: hidden;
-    position: relative;
+    background: linear-gradient(to bottom, #1e1e2f, #1e1e2f); /* Single solid gradient */
+    color: #f1f1f1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
 }
 
-/* Background Heading Animation */
-.background {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: -1;
-    overflow: hidden;
-    width: 100%;
-    height: 100vh;
-}
-
-.animated-heading {
-    font-size: 5rem;
-    font-weight: 600;
-    text-transform: uppercase;
+/* Welcome Heading */
+.heading {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 30px;
+    color: #ffffff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
     text-align: center;
-    color: rgba(255, 255, 255, 0.1);
-    animation: move 10s linear infinite;
-}
-
-@keyframes move {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(100%); }
 }
 
 /* Form Container */
 .container {
-    max-width: 400px;
-    margin: 50px auto;
-    padding: 20px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    max-width: 450px; /* Increased width for a bigger form */
+    width: 90%;
+    padding: 25px 35px;
+    background: rgba(0, 0, 0, 0.85);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(6px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 /* Form Title */
@@ -55,54 +44,50 @@ body {
     text-align: center;
     font-size: 2rem;
     margin-bottom: 20px;
-    color: #f1f1f1;
+    color: #ffffff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
-/* Form Inputs */
+/* Form Group and Inputs */
+.form-group {
+    margin-bottom: 15px;
+}
+
 .form-group input {
     width: 100%;
-    padding: 10px;
-    margin: 10px 0;
-    border: none;
-    border-radius: 5px;
-    background: #333;
-    color: #fff;
+    padding: 15px; /* Increased padding for better usability */
+    margin: 5px 0;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.3s ease;
+}
+
+.form-group input:focus {
+    border-color: #4ecca3;
 }
 
 /* Button Styling */
 .btn {
     width: 100%;
-    padding: 10px;
+    padding: 15px; /* Increased padding for a larger button */
     margin-top: 20px;
     background: linear-gradient(90deg, #4ecca3, #3e9cff);
     border: none;
-    border-radius: 5px;
-    color: #fff;
+    border-radius: 6px;
+    color: #ffffff;
     font-size: 1rem;
     cursor: pointer;
+    font-weight: 600;
     transition: all 0.3s ease;
 }
 
 .btn:hover {
     background: linear-gradient(90deg, #3e9cff, #4ecca3);
     transform: scale(1.05);
-}
-
-/* Flash Messages */
-.alert {
-    padding: 10px;
-    margin-bottom: 10px;
-    border-radius: 5px;
-}
-
-.alert.error {
-    background: #ff4d4d;
-    color: #fff;
-}
-
-.alert.success {
-    background: #4dff88;
-    color: #fff;
 }
 
 /* Redirect Link */
@@ -113,30 +98,57 @@ body {
 }
 
 .redirect a {
-    color: #3e9cff;
+    color: #4ecca3;
     text-decoration: none;
+    font-weight: 500;
 }
 
 .redirect a:hover {
     text-decoration: underline;
+    color: #3e9cff;
 }
-/* Ripple Effect */
-.btn {
+/* Form Group Enhancements */
+.form-group input {
     position: relative;
-    overflow: hidden;
+    padding: 15px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.05);
+    transition: border-color 0.3s, background-color 0.3s;
 }
 
-.btn .ripple {
+.form-group input:focus {
+    border-color: #4ecca3;
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 8px rgba(78, 204, 163, 0.6);
+}
+
+/* Button Enhancements */
+.btn:hover {
+    background: linear-gradient(90deg, #4ecca3, #00c6ff);
+    transform: scale(1.1);
+    box-shadow: 0 5px 15px rgba(78, 204, 163, 0.5);
+}
+
+/* Gradient Border on Focus */
+.form-group input:focus::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* Add Icons Inside Inputs (Optional) */
+.form-group {
+    position: relative;
+}
+
+.form-group input {
+    padding-left: 40px; /* Space for icon */
+}
+
+.form-group::before {
+    content: attr(data-icon);
     position: absolute;
-    background: rgba(255, 255, 255, 0.6);
-    border-radius: 50%;
-    transform: scale(0);
-    animation: ripple-animation 0.6s linear;
-}
-
-@keyframes ripple-animation {
-    to {
-        transform: scale(4);
-        opacity: 0;
-    }
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.2rem;
+    color: rgba(255, 255, 255, 0.5);
 }

@@ -13,4 +13,47 @@ document.addEventListener("DOMContentLoaded", () => {
             container.appendChild(star);
         }
     }
+
+    // Form Validation and Interactivity
+    const form = document.querySelector("form");
+    const inputs = document.querySelectorAll(".form-group input");
+    const passwordField = document.querySelector("input[type='password']");
+    
+    // Add password visibility toggle
+    const togglePasswordBtn = document.createElement("span");
+    togglePasswordBtn.textContent = "🙈";
+    togglePasswordBtn.style.cursor = "pointer";
+    togglePasswordBtn.style.marginLeft = "-30px";
+    togglePasswordBtn.style.position = "relative";
+    passwordField.parentNode.style.position = "relative";
+    passwordField.parentNode.appendChild(togglePasswordBtn);
+
+    togglePasswordBtn.addEventListener("click", () => {
+        if (passwordField.type === "password") {
+            passwordField.type = "text";
+            togglePasswordBtn.textContent = "👁️";
+        } else {
+            passwordField.type = "password";
+            togglePasswordBtn.textContent = "🙈";
+        }
+    });
+
+    // Input validation
+    form.addEventListener("submit", (e) => {
+        let valid = true;
+        inputs.forEach(input => {
+            if (!input.value.trim()) {
+                valid = false;
+                input.style.borderColor = "red";
+            } else {
+                input.style.borderColor = "rgba(255, 255, 255, 0.3)";
+            }
+        });
+
+        // Check if all fields are filled correctly
+        if (!valid) {
+            e.preventDefault();
+            alert("Please fill in all fields!");
+        }
+    });
 });

@@ -7,24 +7,33 @@ document.addEventListener("DOMContentLoaded", () => {
             setTimeout(() => alert.remove(), 500); // Removes the alert after fading out
         }, 5000);
     });
-});
 
-// Ripple effect for the submit button
-const button = document.querySelector(".btn");
-button.addEventListener("click", (e) => {
-    const ripple = document.createElement("span");
-    const rect = button.getBoundingClientRect();
+    // Password visibility toggle
+    const passwordInput = document.getElementById("password");
+    const togglePassword = document.getElementById("toggle-password");
+    togglePassword.addEventListener("click", () => {
+        const type = passwordInput.getAttribute("type") === "password" ? "text" : "password";
+        passwordInput.setAttribute("type", type);
+        togglePassword.textContent = type === "password" ? "🙈" : "🙈👁️";
+    });
 
-    // Set ripple size and position
-    ripple.style.width = ripple.style.height = Math.max(rect.width, rect.height) + "px";
-    ripple.style.left = e.clientX - rect.left - ripple.offsetWidth / 2 + "px";
-    ripple.style.top = e.clientY - rect.top - ripple.offsetHeight / 2 + "px";
+    // Ripple effect for the submit button
+    const button = document.querySelector(".btn");
+    button.addEventListener("click", (e) => {
+        const ripple = document.createElement("span");
+        const rect = button.getBoundingClientRect();
 
-    ripple.classList.add("ripple");
-    button.appendChild(ripple);
+        // Set ripple size and position
+        ripple.style.width = ripple.style.height = Math.max(rect.width, rect.height) + "px";
+        ripple.style.left = e.clientX - rect.left - ripple.offsetWidth / 2 + "px";
+        ripple.style.top = e.clientY - rect.top - ripple.offsetHeight / 2 + "px";
 
-    // Remove ripple after animation
-    setTimeout(() => {
-        ripple.remove();
-    }, 600);
+        ripple.classList.add("ripple");
+        button.appendChild(ripple);
+
+        // Remove ripple after animation
+        setTimeout(() => {
+            ripple.remove();
+        }, 600);
+    });
 });
