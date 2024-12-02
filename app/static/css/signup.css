@@ -152,3 +152,45 @@ body {
     font-size: 1.2rem;
     color: rgba(255, 255, 255, 0.5);
 }
+
+/* Close Button for Alerts */
+.close {
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: #ffffff;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-weight: 700;
+    transition: color 0.3s ease;
+}
+
+.close:hover {
+    color: #4ecca3;
+}
+
+/* Alert Styling */
+.alert {
+    position: relative;
+    padding: 15px 20px 15px 15px;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #ffffff;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    font-size: 1rem;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.alert.error {
+    border-color: #ff6b6b;
+    background: rgba(255, 107, 107, 0.2);
+}
+
+.alert.success {
+    border-color: #4ecca3;
+    background: rgba(78, 204, 163, 0.2);
+}

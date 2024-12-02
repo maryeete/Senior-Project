@@ -56,4 +56,16 @@ document.addEventListener("DOMContentLoaded", () => {
             alert("Please fill in all fields!");
         }
     });
+
+    // Close Button Functionality for Flash Messages
+    const alerts = document.querySelectorAll(".alert");
+    alerts.forEach(alert => {
+        const closeButton = alert.querySelector(".close");
+        if (closeButton) {
+            closeButton.addEventListener("click", () => {
+                alert.style.opacity = "0";
+                setTimeout(() => alert.remove(), 300);
+            });
+        }
+    });
 });

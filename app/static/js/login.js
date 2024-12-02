@@ -1,11 +1,20 @@
-// Auto-hide flash messages after 5 seconds
 document.addEventListener("DOMContentLoaded", () => {
     const alerts = document.querySelectorAll(".alert");
     alerts.forEach(alert => {
+        // Auto-hide flash messages after 5 seconds
         setTimeout(() => {
             alert.style.opacity = "0";
             setTimeout(() => alert.remove(), 500); // Removes the alert after fading out
         }, 5000);
+
+        // Add functionality for close button
+        const closeButton = alert.querySelector(".close");
+        if (closeButton) {
+            closeButton.addEventListener("click", () => {
+                alert.style.opacity = "0";
+                setTimeout(() => alert.remove(), 500); // Removes the alert after fade-out
+            });
+        }
     });
 
     // Password visibility toggle
