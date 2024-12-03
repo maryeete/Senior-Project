@@ -4,6 +4,23 @@
     <title>Emotion Analysis Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
+        .text-input-container {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        #textInput {
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 10px;
+            resize: vertical;
+        }
+        button {
+            padding: 10px 20px;
+            cursor: pointer;
+            align-self: center;
+        }
+
         :root {
             --primary-color: #2563eb;
             --success-color: #16a34a;
@@ -336,6 +353,8 @@
             background-color: #fee2e2;
             border-radius: 8px;
             margin: 1rem 0;
+
+        
         }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -358,6 +377,10 @@
         <button class="analysis-button" onclick="showSection('image-section')">
             <i class="fas fa-image"></i>
             Image Analysis
+        </button>
+        <button class="analysis-button" onclick="showSection('text-section')">
+            <i class="fas fa-font"></i>
+            Text Analysis
         </button>
         <button class="analysis-button" onclick="window.location.href='/analytics';">
             <i class="fas fa-chart-line"></i>
@@ -423,8 +446,18 @@
                 <div id="emotionCards"></div>
             </div>
         </div>
-        
-    </div>
+
+        <!-- Text Analysis Section -->
+        <div id="text-section" class="section">
+            <h2>Text Analysis</h2>
+            <div class="text-input-container">
+                <textarea id="textInput" rows="6" placeholder="Enter text for analysis..."></textarea>
+                <button onclick="analyzeText()">Analyze Text</button>
+            </div>
+            <div id="textResults" class="results-container">
+                <div id="textEmotionCards"></div>
+            </div>
+        </div>
 
     <script>
         function showSection(sectionId) {
