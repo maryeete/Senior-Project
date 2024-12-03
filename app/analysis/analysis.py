@@ -620,7 +620,13 @@ def analyze_text():
     try:
         # Predict sentiment
         sentiment = predict_sentiment(user_input)
-
+        
+        emotion_data = {"sentiment": sentiment}
+        user_id = current_user.id 
+        file = user_input
+        file_type = "text"
+        analyzer.store_emotion_data(user_id, emotion_data, file, file_type)
+        
         return jsonify({
             "status": "success",
             "sentiment": sentiment
