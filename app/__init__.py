@@ -51,10 +51,10 @@ def create_app():
         return User.get_user(id)
 
     from app.auth.routes import auth
-    from app.video.video import video
+    from app.analysis.analysis import analysis
     from app.dashboard.dashboard import dashboard
     app.register_blueprint(auth)
-    app.register_blueprint(video)
+    app.register_blueprint(analysis)
     app.register_blueprint(dashboard)
     
     return app

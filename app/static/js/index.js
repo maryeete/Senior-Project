@@ -383,3 +383,40 @@ document.getElementById('audioFileInput').addEventListener('change', async funct
         }
     }
 });
+
+function analyzeText() {
+    const textInput = document.getElementById('textInput').value.trim();
+    const textResults = document.getElementById('textResults');
+    
+    // Clear previous results
+    textResults.innerHTML = '';
+
+    if (!textInput) {
+        alert('Please enter some text.');
+        return;
+    }
+
+    fetch('/analyze_text', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: new URLSearchParams({
+            'textInput': textInput
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            const sentiment = data.sentiment;
+            textResults.innerHTML = `<div><strong>Sentiment:</strong> ${sentiment}</div>`;
+        } else {
+            textResults.innerHTML = `<div><strong>Error:</strong> ${data.error}</div>`;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        textResults.innerHTML = `<div><strong>Failed to analyze text</strong></div>`;
+    });
+}
+

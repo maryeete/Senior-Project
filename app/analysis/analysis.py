@@ -3,6 +3,7 @@ import cv2
 from flask_login import current_user, login_required
 import numpy as np
 import librosa
+from sklearn.linear_model import LogisticRegression
 import sounddevice as sd
 import threading
 import queue
@@ -20,23 +21,30 @@ import tensorflow as tf
 import shutil
 import mysql.connector
 import json
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score
+import matplotlib.pyplot as plt
+import seaborn as sns
 from secret import db_host, db_user, db_password, db_database  # Importing MySQL DB credentials from secret.py
 warnings.filterwarnings('ignore')
 
-video = Blueprint(
-    'video',  # Blueprint name
+analysis = Blueprint(
+    'analysis',  # Blueprint name
     __name__,
     static_folder='static',
     template_folder='templates'
 )
 
 # Blueprint-specific configurations
-video.config = {
+analysis.config = {
     'UPLOAD_FOLDER': os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads'),
     'MAX_CONTENT_LENGTH': 16 * 1024 * 1024  # 16MB max file size
 }
 
-os.makedirs(video.config['UPLOAD_FOLDER'], exist_ok=True)
+os.makedirs(analysis.config['UPLOAD_FOLDER'], exist_ok=True)
 
 # Recreate models directory
 os.makedirs('models', exist_ok=True)
@@ -557,13 +565,79 @@ analyzer = EmotionAnalyzer()
 # Add these global variables at the top of the file
 combined_audio_data = []
 combined_stream = None
+tfidf_vectorizer = None
+classifier_review = None
 
-@video.route('/')
+@analysis.route('/')
 @login_required
 def index():
     return render_template('index.html', name=current_user.full_name)
 
-@video.route('/get_devices')
+# Function to load and prepare the model (called once when the app starts)
+@analysis.before_app_request
+def load_and_prepare_model():
+    global tfidf_vectorizer, classifier_review
+
+    # Assuming the model preparation is the same as before
+    df = pd.read_csv('data/Database Data - Amazon Reviews.csv')
+    df['review_text'].fillna('', inplace=True)
+
+    tfidf_vectorizer = TfidfVectorizer(max_features=1000)
+    X_text = tfidf_vectorizer.fit_transform(df['review_text'])
+    X_rating = df['rating'].values.reshape(-1, 1)
+    X = pd.concat([pd.DataFrame(X_text.toarray()), pd.DataFrame(X_rating)], axis=1)
+
+    positive_threshold = 4
+    negative_threshold = 2
+
+    df['sentiment_id'] = pd.cut(df['rating'], bins=[-float('inf'), negative_threshold, positive_threshold, float('inf')],
+                                 labels=['Negative', 'Neutral', 'Positive'])
+
+    y_rating = df['sentiment_id']
+    X_train, X_test, y_train, y_test = train_test_split(X, y_rating, test_size=0.2, random_state=42)
+
+    classifier_review = LogisticRegression(max_iter=1000)
+    classifier_review.fit(X_train.iloc[:, :-1], y_train)
+
+# Predict sentiment for the provided text input
+def predict_sentiment(user_input):
+    global tfidf_vectorizer, classifier_review
+    X_user_input = tfidf_vectorizer.transform([user_input])  # Transform the input text
+    prediction = classifier_review.predict(X_user_input)  # Get sentiment prediction
+    return prediction[0]
+
+# Text analysis route
+@analysis.route('/analyze_text', methods=['POST'])
+def analyze_text():
+    if 'textInput' not in request.form:
+        return jsonify({"error": "No text input provided"}), 400
+
+    user_input = request.form['textInput'].strip()
+    
+    if not user_input:
+        return jsonify({"error": "Empty text input"}), 400
+
+    try:
+        # Predict sentiment
+        sentiment = predict_sentiment(user_input)
+
+        return jsonify({
+            "status": "success",
+            "sentiment": sentiment
+        })
+
+    except Exception as e:
+        print(f"Error in text analysis route: {str(e)}")
+        return jsonify({
+            "error": "Failed to analyze text",
+            "details": str(e),
+            "suggestions": [
+                "Make sure the text input is valid",
+                "Try a different text"
+            ]
+        }), 500
+        
+@analysis.route('/get_devices')
 def get_devices():
     # Get available cameras
     camera_devices = []
@@ -593,7 +667,7 @@ def get_devices():
         "microphones": audio_devices
     })
 
-@video.route('/analyze_image', methods=['POST'])
+@analysis.route('/analyze_image', methods=['POST'])
 def analyze_image():
     if 'image' not in request.files:
         return jsonify({"error": "No image provided"}), 400
@@ -653,7 +727,7 @@ def analyze_image():
         }), 500
         
 
-@video.route('/analyze_frames', methods=['POST'])
+@analysis.route('/analyze_frames', methods=['POST'])
 def analyze_frames():
     if 'image' not in request.files:
         return jsonify({"error": "No image provided"}), 400
@@ -763,7 +837,7 @@ def gen_frames():
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
-@video.route('/video_feed/<int:camera_id>')
+@analysis.route('/video_feed/<int:camera_id>')
 def video_feed(camera_id):
     def generate(camera_id):
         camera = cv2.VideoCapture(camera_id)
@@ -854,7 +928,7 @@ def video_feed(camera_id):
     return Response(generate(camera_id),
                    mimetype='multipart/x-mixed-replace; boundary=frame')
 
-@video.route('/start_video', methods=['POST'])
+@analysis.route('/start_video', methods=['POST'])
 def start_video():
     try:
         # Test camera access
@@ -870,7 +944,7 @@ def start_video():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@video.route('/start_audio_recording', methods=['POST'])
+@analysis.route('/start_audio_recording', methods=['POST'])
 def start_audio_recording():
     global recording_stream, recording_data
     try:
@@ -895,7 +969,7 @@ def start_audio_recording():
         print(f"Error starting audio recording: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
-@video.route('/stop_audio_recording', methods=['POST'])
+@analysis.route('/stop_audio_recording', methods=['POST'])
 def stop_audio_recording():
     global recording_stream, recording_data
     try:
@@ -981,7 +1055,7 @@ def stop_audio_recording():
         print(f"Error stopping audio recording: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
-@video.route('/analyze_audio', methods=['POST'])
+@analysis.route('/analyze_audio', methods=['POST'])
 def analyze_audio():
     if 'audio' not in request.files:
         return jsonify({"error": "No audio file provided"}), 400
@@ -993,7 +1067,7 @@ def analyze_audio():
     try:
         # Save and process audio
         filename = secure_filename(file.filename)
-        filepath = os.path.join(video.config['UPLOAD_FOLDER'], filename)
+        filepath = os.path.join(analysis.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
         
         # Analyze audio
@@ -1015,7 +1089,7 @@ def analyze_audio():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@video.route('/start_combined', methods=['POST'])
+@analysis.route('/start_combined', methods=['POST'])
 def start_combined():
     global combined_stream, combined_audio_data
     
@@ -1043,7 +1117,7 @@ def start_combined():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@video.route('/stop_combined', methods=['POST'])
+@analysis.route('/stop_combined', methods=['POST'])
 def stop_combined():
     global combined_stream
     
@@ -1056,7 +1130,7 @@ def stop_combined():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@video.route('/combined_feed/<int:camera_id>')
+@analysis.route('/combined_feed/<int:camera_id>')
 def combined_feed(camera_id):
     print('running combined')
     def generate(camera_id):
@@ -1115,7 +1189,7 @@ def combined_feed(camera_id):
     return Response(generate(camera_id),
                    mimetype='multipart/x-mixed-replace; boundary=frame')
 
-@video.route('/upload_video', methods=['POST'])
+@analysis.route('/upload_video', methods=['POST'])
 def upload_video():
     video_file = request.files['video']
     if video_file:
@@ -1196,9 +1270,7 @@ def upload_video():
         return jsonify({"error": "No video file provided"}), 400
 
 
-
-
-@video.route('/analyze_audio_file', methods=['POST'])
+@analysis.route('/analyze_audio_file', methods=['POST'])
 def analyze_audio_file():
     try:
         if 'audio' not in request.files:
@@ -1210,7 +1282,7 @@ def analyze_audio_file():
         
         if file:
             filename = secure_filename(file.filename)
-            filepath = os.path.join(video.config['UPLOAD_FOLDER'], filename)
+            filepath = os.path.join(analysis.config['UPLOAD_FOLDER'], filename)
             file.save(filepath)
             
             try:
@@ -1249,4 +1321,4 @@ def analyze_audio_file():
         return jsonify({"error": "Error handling audio file upload"}), 500
 
 # if __name__ == '__main__':
-#     video.run(debug=True)
+#     analysis.run(debug=True)
