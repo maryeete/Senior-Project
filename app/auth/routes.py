@@ -180,41 +180,6 @@ def login():
     return render_template('login.html')
 
 
-# @auth.route("/old")
-# @login_required
-# def index():
-#     """
-#     Renders the index page, accessible only to logged-in users.
-    
-#     Returns:
-#         Response: Renders the 'index.html' template with the user's name, reviews, and uploaded audio files.
-#     """
-#     user_id = current_user.id
-    
-#     # Connect to the MySQL database
-#     connection = create_db_connection()
-#     cursor = connection.cursor(dictionary=True)  # Use dictionary=True for results as dictionaries
-
-#     # Query to get reviews for the logged-in user
-#     cursor.execute("SELECT review_id, rating, review_text, sentiment_id FROM Reviews WHERE user_id = %s", (user_id,))
-#     user_reviews = cursor.fetchall()
-
-#     # Calculate the average rating
-#     if user_reviews:
-#         average_rating = sum(review['rating'] for review in user_reviews) / len(user_reviews)
-#     else:
-#         average_rating = 0  # Default to 0 if no reviews are found
-
-#     # List uploaded audio files
-#     audio_directory = 'app/static/uploads/'  # Adjust this path based on your structure
-#     audio_files = [f for f in os.listdir(audio_directory) if os.path.isfile(os.path.join(audio_directory, f))]
-
-#     cursor.close()
-#     connection.close()
-
-#     return render_template('old_index.html', name=current_user.full_name, reviews=user_reviews, audio_files=audio_files, average_rating=average_rating)
-
-
 @auth.route("/logout", methods=["POST"])
 def logout():
     """
