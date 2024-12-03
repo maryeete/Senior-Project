@@ -623,9 +623,10 @@ def analyze_text():
         
         emotion_data = {"sentiment": sentiment}
         user_id = current_user.id 
-        file = user_input
+        # Convert the user_input string to bytes (to store as a blob)
+        user_input_bytes = user_input.encode('utf-8')
         file_type = "text"
-        analyzer.store_emotion_data(user_id, emotion_data, file, file_type)
+        analyzer.store_emotion_data(user_id, emotion_data, user_input_bytes, file_type)
         
         return jsonify({
             "status": "success",

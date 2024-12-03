@@ -53,13 +53,17 @@
                                 <source src="{{ file.file_data }}" type="video/mp4">
                                 Your browser does not support the video tag.
                             </video>
+                        {% elif file.file_type == 'text' %}
+                            <div class="file-content">
+                                <p><strong>Sentiment:</strong> {{ file.sentiment }}</p>
+                            </div>
                         {% endif %}
                     </div>
-
+        
                     <div class="file-footer">
-                        {% if file.dominant_emotion %}
+                        {% if file.file_type != 'text' and file.dominant_emotion %}
                             <p><strong>Dominant Emotion:</strong> {{ file.dominant_emotion.name }} ({{ file.dominant_emotion.confidence }}%)</p>
-                        {% else %}
+                        {% elif file.file_type != 'text' %}
                             <p>No emotion detected for this file.</p>
                         {% endif %}
                         <ul>
@@ -71,6 +75,7 @@
                 </div>
             {% endfor %}
         </div>
+        
     </div>
 </body>
 </html>

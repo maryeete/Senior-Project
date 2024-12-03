@@ -123,20 +123,24 @@ def dashboard_route():
         # Normalize the emotion data to ensure consistency
         # If 'emotions' is a list containing one dictionary, we treat it as such
         if isinstance(file['emotions'], list) and len(file['emotions']) == 1:
-            # If the list contains a single dictionary
+            # If the list contains a single dictionary, treat it as such
             file['dominant_emotion'] = file['emotions'][0].get('dominant_emotion', {})
             file['other_emotions'] = file['emotions'][0].get('other_emotions', [])
+            file['sentiment'] = file['emotions'][0].get('sentiment', None)
         elif isinstance(file['emotions'], list) and len(file['emotions']) > 1:
             # If the list contains multiple emotions, extract them
             file['dominant_emotion'] = file['emotions'][0].get('dominant_emotion', {})
             file['other_emotions'] = file['emotions'][0].get('other_emotions', [])
+            file['sentiment'] = file['emotions'][0].get('sentiment', None)
         elif isinstance(file['emotions'], dict):
             # If emotions are a dictionary, treat it as a list with one item
             file['dominant_emotion'] = file['emotions'].get('dominant_emotion', {})
             file['other_emotions'] = file['emotions'].get('other_emotions', [])
+            file['sentiment'] = file['emotions'].get('sentiment', None)
         else:
             # Handle case where no emotions are available
             file['dominant_emotion'] = {}
             file['other_emotions'] = []
+            file['sentiment'] = None
 
     return render_template('dashboard.html', files=files, file_type=file_type)
