@@ -43,5 +43,5 @@ python3 main.py
 
 ## To-Do
 
-    - Video integration with DB
+    - Frontend
     
