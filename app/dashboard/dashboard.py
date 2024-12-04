@@ -109,8 +109,10 @@ def dashboard_route():
         # Encode binary data to base64
         encoded_file_data = base64.b64encode(file_data).decode('utf-8')
 
-        # Set file type for image, video, or audio
-        file['file_data'] = f"data:{file_extension};base64,{encoded_file_data}"
+        if file_extension == 'text':
+            file['file_data'] = f'{file_data.decode()}'
+        else:
+            file['file_data'] = f"data:{file_extension};base64,{encoded_file_data}" # Set file type for image, video, or audio
 
         # Access the emotion_data field (assuming it's stored as JSON)
         emotion_data = file.get('emotion_data', '[]')  # Default to an empty list if not available
@@ -143,8 +145,5 @@ def dashboard_route():
             file['dominant_emotion'] = {}
             file['other_emotions'] = []
             file['sentiment'] = None
-    if file.file_type == 'text':
-        # Decode the base64 string
-        decoded_text = base64.b64decode(file.file_data.split(',')[1]).decode('utf-8')
-        file.file_data = decoded_text
+
     return render_template('dashboard.html', files=files, file_type=file_type)
