@@ -232,7 +232,8 @@ class EmotionAnalyzer:
             
             # Convert emotion_data to JSON format
             emotion_data_json = json.dumps(emotion_data)
-            
+            # Check the type of 'file' to ensure it's a byte object
+
             # Prepare the insert statement
             query = """
                 INSERT INTO user_emotions (user_id, emotion_data, file, file_type)
@@ -624,9 +625,11 @@ def analyze_text():
         emotion_data = {"sentiment": sentiment}
         user_id = current_user.id 
         # Convert the user_input string to bytes (to store as a blob)
-        user_input_bytes = user_input.encode('utf-8')
+        # user_input_bytes = user_input.encode('utf-8')
+        # print(f'{user_input = }')
+        # print(f'{user_input_bytes = }')
         file_type = "text"
-        analyzer.store_emotion_data(user_id, emotion_data, user_input_bytes, file_type)
+        analyzer.store_emotion_data(user_id, emotion_data, user_input, file_type)
         
         return jsonify({
             "status": "success",

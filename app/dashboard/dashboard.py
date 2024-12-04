@@ -77,6 +77,7 @@ def analytics():
         "labels": list(emotion_counts.keys()),
         "data": list(emotion_counts.values())
     }
+    print(chart_data)
 
     return render_template('analytics.html', chart_data=chart_data, selected_file_type=file_type)
 
@@ -142,5 +143,8 @@ def dashboard_route():
             file['dominant_emotion'] = {}
             file['other_emotions'] = []
             file['sentiment'] = None
-
+    if file.file_type == 'text':
+        # Decode the base64 string
+        decoded_text = base64.b64decode(file.file_data.split(',')[1]).decode('utf-8')
+        file.file_data = decoded_text
     return render_template('dashboard.html', files=files, file_type=file_type)

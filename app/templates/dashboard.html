@@ -30,6 +30,7 @@
                     <option value="image" {% if file_type == 'image' %}selected{% endif %}>Images</option>
                     <option value="video" {% if file_type == 'video' %}selected{% endif %}>Videos</option>
                     <option value="audio" {% if file_type == 'audio' %}selected{% endif %}>Audios</option>
+                    <option value="text" {% if file_type == 'text' %}selected{% endif %}>Text</option>
                 </select>
             </form>
         </div>
@@ -56,6 +57,7 @@
                         {% elif file.file_type == 'text' %}
                             <div class="file-content">
                                 <p><strong>Sentiment:</strong> {{ file.sentiment }}</p>
+                                <p><strong>Text:</strong> {{ file.file_data }}</p> <!-- Display the decoded text -->
                             </div>
                         {% endif %}
                     </div>
