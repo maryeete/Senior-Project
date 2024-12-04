@@ -1,61 +1,59 @@
-// Retrieve chart data from the HTML element
-const chartDataElement = document.getElementById('chart-data');
-const labels = JSON.parse(chartDataElement.getAttribute('data-labels'));
-const data = JSON.parse(chartDataElement.getAttribute('data-data'));
+window.onload = function () {
+    // Retrieve the data passed from Flask (stored in hidden divs)
+    const sentimentData = JSON.parse(document.getElementById('sentimentData').innerText);
+    const emotionData = JSON.parse(document.getElementById('emotionData').innerText);
 
-// Pie Chart
-const pieData = {
-    labels: labels,
-    datasets: [{
-        data: data,
-        backgroundColor: ['#ff6384', '#36a2eb', '#cc65fe', '#ffce56', '#ff5733'],
-        hoverBackgroundColor: ['#ff4c60', '#1f76c3', '#9f4ce0', '#ffac28', '#ff5733'],
-    }]
-};
+    // Prepare sentiment chart data
+    const sentimentLabels = Object.keys(sentimentData);
+    const sentimentValues = Object.values(sentimentData);
 
-new Chart(document.getElementById('pieChart'), {
-    type: 'pie',
-    data: pieData
-});
+    // Prepare emotion chart data
+    const dominantEmotionLabels = Object.keys(emotionData.dominant_emotion);
+    const dominantEmotionValues = Object.values(emotionData.dominant_emotion);
+    const otherEmotionLabels = Object.keys(emotionData.other_emotions);
+    const otherEmotionValues = Object.values(emotionData.other_emotions);
 
-// Line Chart
-const lineData = {
-    labels: labels,
-    datasets: [{
-        label: 'Emotion Count Trend',
-        data: data,
-        fill: false,
-        borderColor: 'rgb(75, 192, 192)',
-        tension: 0.1
-    }]
-};
+    // Create sentiment pie chart
+    const sentimentPieChart = new Chart(document.getElementById('sentimentPieChart').getContext('2d'), {
+        type: 'pie',
+        data: {
+            labels: sentimentLabels,
+            datasets: [{
+                data: sentimentValues,
+                backgroundColor: ['#FF5733', '#33FF57', '#3357FF'], // Example colors
+            }]
+        }
+    });
 
-new Chart(document.getElementById('lineChart'), {
-    type: 'line',
-    data: lineData
-});
+    // Create emotion pie chart for dominant emotions
+    const emotionPieChart = new Chart(document.getElementById('emotionPieChart').getContext('2d'), {
+        type: 'pie',
+        data: {
+            labels: dominantEmotionLabels,
+            datasets: [{
+                data: dominantEmotionValues,
+                backgroundColor: ['#FF5733', '#33FF57', '#3357FF', '#FFD700'], // Example colors
+            }]
+        }
+    });
 
-// Bar Chart
-const barData = {
-    labels: labels,
-    datasets: [{
-        label: 'Emotion Count',
-        data: data,
-        backgroundColor: '#42A5F5',
-        borderColor: '#1E88E5',
-        borderWidth: 1
-    }]
-};
-
-new Chart(document.getElementById('barChart'), {
-    type: 'bar',
-    data: barData,
-    options: {
-        responsive: true,
-        scales: {
-            y: {
-                beginAtZero: true
+    // Create emotion bar chart for other emotions
+    const emotionBarChart = new Chart(document.getElementById('emotionBarChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: otherEmotionLabels,
+            datasets: [{
+                label: 'Other Emotions',
+                data: otherEmotionValues,
+                backgroundColor: '#FF5733',
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
             }
         }
-    }
-});
+    });
+}

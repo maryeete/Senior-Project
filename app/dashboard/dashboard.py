@@ -1,11 +1,9 @@
-import os
 from flask import Blueprint, Flask, json, render_template, request, jsonify, Response
 from flask_login import current_user, login_required
 import mysql.connector
 from secret import db_host, db_user, db_password, db_database  # Importing MySQL DB credentials from secret.py
 from werkzeug.utils import secure_filename
 import base64
-from io import BytesIO
 
 dashboard = Blueprint(
     'dashboard',  # Blueprint name
@@ -28,58 +26,72 @@ def create_db_connection():
         database=db_database,
     )
     
-@dashboard.route('/analytics', methods=['GET', 'POST'])
+
+import json
+
+@dashboard.route('/analytics')
 def analytics():
-    file_type = request.form.get('file_type', 'all')  # Default to 'all' (overall sort)
+    # Connect to the database
     conn = create_db_connection()
     cursor = conn.cursor(dictionary=True)
+    
+    # Query all emotion data
+    cursor.execute("SELECT emotion_data, file_type FROM user_emotions")
+    emotions = cursor.fetchall()
 
-    if file_type == 'all':
-        cursor.execute("SELECT emotion_data, file_type FROM User_Emotions WHERE user_id = %s", (current_user.id,))
-    else:
-        cursor.execute("SELECT emotion_data, file_type FROM User_Emotions WHERE user_id = %s AND file_type = %s", 
-                       (current_user.id, file_type))
-
-    emotions_data = cursor.fetchall()
-
-    emotions = []
-    for data in emotions_data:
-        try:
-            emotion_json = json.loads(data['emotion_data'])
-            
-            # Normalize the emotion data for both formats
-            if isinstance(emotion_json, list):  # When data is in list format
-                for emotion in emotion_json:
-                    if isinstance(emotion, dict):
-                        # Add dominant emotion
-                        emotions.append(emotion['dominant_emotion']['name'])
-                        
-                        # Add other emotions
-                        for other_emotion in emotion.get('other_emotions', []):
-                            emotions.append(other_emotion['name'])
-            elif isinstance(emotion_json, dict):  # When data is in dictionary format
-                # Add dominant emotion
-                emotions.append(emotion_json['dominant_emotion']['name'])
-                
-                # Add other emotions
-                for other_emotion in emotion_json.get('other_emotions', []):
-                    emotions.append(other_emotion['name'])
-        
-        except Exception as e:
-            print(f"Error processing emotion data: {e}")
-
-    # Process the data for charts
-    emotion_counts = {}
-    for emotion in emotions:
-        emotion_counts[emotion] = emotion_counts.get(emotion, 0) + 1
-
-    chart_data = {
-        "labels": list(emotion_counts.keys()),
-        "data": list(emotion_counts.values())
+    sentiment_data = {}
+    emotion_data = {
+        'dominant_emotion': {},
+        'other_emotions': {}
     }
-    print(chart_data)
 
-    return render_template('analytics.html', chart_data=chart_data, selected_file_type=file_type)
+    # Process emotion data
+    for record in emotions:
+        emotion_data_json = record['emotion_data']
+        file_type = record['file_type']
+
+        # Ensure that emotion_data is deserialized if it's a string
+        if isinstance(emotion_data_json, str):
+            try:
+                emotion_data_json = json.loads(emotion_data_json)
+            except json.JSONDecodeError:
+                continue  # If the data is not valid JSON, skip this record
+
+        if file_type == 'text':
+            sentiment = emotion_data_json.get('sentiment')
+            sentiment_data[sentiment] = sentiment_data.get(sentiment, 0) + 1
+        else:
+            # Initialize default values for dominant emotion and other emotions
+            dominant_emotion = {}
+            other_emotions = []
+
+            if isinstance(emotion_data_json, dict):
+                dominant_emotion = emotion_data_json.get('dominant_emotion', {})
+                other_emotions = emotion_data_json.get('other_emotions', [])
+            elif isinstance(emotion_data_json, list) and len(emotion_data_json) > 0:
+                dominant_emotion = emotion_data_json[0].get('dominant_emotion', {})
+                other_emotions = emotion_data_json[0].get('other_emotions', [])
+
+            # Check if the dominant_emotion dictionary is not empty and update accordingly
+            if dominant_emotion:
+                dominant_emotion_name = dominant_emotion.get('name')
+                if dominant_emotion_name:
+                    emotion_data['dominant_emotion'][dominant_emotion_name] = emotion_data['dominant_emotion'].get(dominant_emotion_name, 0) + 1
+
+            # Update other emotions if available
+            for emotion in other_emotions:
+                emotion_name = emotion.get('name')
+                if emotion_name:
+                    emotion_data['other_emotions'][emotion_name] = emotion_data['other_emotions'].get(emotion_name, 0) + 1
+
+    # Close the connection
+    cursor.close()
+    conn.close()
+
+    return render_template('analytics.html', sentiment_data=sentiment_data, emotion_data=emotion_data)
+
+
+
 
 @dashboard.route('/dashboard', methods=['GET', 'POST'])
 def dashboard_route():

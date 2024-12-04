@@ -4,17 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Emotion Analytics</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/analytics.css') }}">
-    <script src="{{ url_for('static', filename='js/analytics.js') }}" defer></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ url_for('static', filename='js/analytics.js') }}"></script>
 </head>
 <body>
     <div class="navbar">
         <a href="/">
             <i class="fas fa-search"></i> Analysis
         </a>
-        <a href="/dashboard">
+        <a href="/analytics">
             <i class="fas fa-th"></i> Dashboard
         </a>
         <form action="/logout" method="POST" style="display: inline;">
@@ -23,43 +23,23 @@
             </button>
         </form>        
     </div>
-    
-    <h1>Emotion Analytics</h1>
-
-    <!-- File Type Filter Form -->
-    <div class="file-type-form-wrapper">
-        <form method="POST" class="file-type-form">
-            <label for="file_type">Select File Type:</label>
-            <select id="file_type" name="file_type" onchange="this.form.submit()">
-                <option value="all" {% if selected_file_type == 'all' %}selected{% endif %}>All</option>
-                <option value="image" {% if selected_file_type == 'image' %}selected{% endif %}>Image</option>
-                <option value="video" {% if selected_file_type == 'video' %}selected{% endif %}>Video</option>
-                <option value="audio" {% if selected_file_type == 'audio' %}selected{% endif %}>Audio</option>
-            </select>
-        </form>
-    </div>
-
-    <!-- Grid Layout for the charts -->
-    <div class="charts-container">
-        <div class="chart-container">
-            <h2>Emotion Distribution - Pie Chart</h2>
-            <canvas id="pieChart"></canvas>
+    <div class="dashboard">
+        <header>
+            <h1>Emotion Analytics Dashboard</h1>
+        </header>
+        <div class="charts-container">
+            <div class="chart-card">
+                <h2>Text Sentiment Analysis</h2>
+                <canvas id="sentimentPieChart"></canvas>
+            </div>
+            <div class="chart-card">
+                <h2>Emotion Analysis</h2>
+                <canvas id="emotionBarChart"></canvas>
+                <canvas id="emotionPieChart"></canvas>
+            </div>
         </div>
-
-        <div class="chart-container">
-            <h2>Emotion Trend - Line Chart</h2>
-            <canvas id="lineChart"></canvas>
-        </div>
-
-        <div class="chart-container">
-            <h2>Emotion Count - Bar Chart</h2>
-            <canvas id="barChart"></canvas>
-        </div>
-    </div>
-    
-    <div id="chart-data" 
-         data-labels="{{ chart_data['labels']|tojson }}" 
-         data-data="{{ chart_data['data']|tojson }}">
-    </div>
+    <!-- Add hidden elements to store your data -->
+    <div id="sentimentData" style="display:none">{{ sentiment_data|tojson }}</div>
+    <div id="emotionData" style="display:none">{{ emotion_data|tojson }}</div>
 </body>
 </html>
