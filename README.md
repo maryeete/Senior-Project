@@ -44,4 +44,6 @@ python3 main.py
 ## To-Do
 
     - Frontend
+
+    - Video uploads very slowly
     
