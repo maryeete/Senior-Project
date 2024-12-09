@@ -4,6 +4,7 @@ import mysql.connector
 from secret import db_host, db_user, db_password, db_database  # Importing MySQL DB credentials from secret.py
 from werkzeug.utils import secure_filename
 import base64
+import json
 
 dashboard = Blueprint(
     'dashboard',  # Blueprint name
@@ -27,9 +28,8 @@ def create_db_connection():
     )
     
 
-import json
-
 @dashboard.route('/analytics')
+@login_required
 def analytics():
     # Connect to the database
     conn = create_db_connection()
@@ -94,8 +94,9 @@ def analytics():
 
 
 @dashboard.route('/dashboard', methods=['GET', 'POST'])
+@login_required
 def dashboard_route():
-    user_id = current_user.id  # Assuming you have a logged-in user
+    user_id = current_user.id
 
     # Filter by file type if a specific type is selected
     file_type = request.form.get('file_type', 'all')
