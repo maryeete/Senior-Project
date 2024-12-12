@@ -1207,32 +1207,33 @@ def upload_video():
         upload_path = os.path.join(current_app.config['UPLOAD_FOLDER'], video_file.filename)
         video_file.save(upload_path)
 
-        # Read the video file as binary data
-        with open(upload_path, 'rb') as f:
-            video_data = f.read()
-
         cap = cv2.VideoCapture(upload_path)
         overall_emotions = {}
+        frame_skip = 10 # Process every 5th frame (adjust as needed)
+        frame_count = 0
 
         while cap.isOpened():
             ret, frame = cap.read()
             if not ret:
                 break
             
-            # Analyze the current frame
-            result = analyzer.analyze_combined_frame(frame)
+            if frame_count % frame_skip == 0:
+                # Analyze the current frame
+                result = analyzer.analyze_combined_frame(frame)
 
-            # Aggregate emotions for the video
-            if result['video']:
-                for video_result in result['video']:
-                    if 'dominant_emotion' in video_result:
-                        dominant = video_result['dominant_emotion']['name']
-                        confidence = video_result['dominant_emotion']['confidence']
-                        if dominant in overall_emotions:
-                            overall_emotions[dominant]['confidence_sum'] += confidence
-                            overall_emotions[dominant]['count'] += 1
-                        else:
-                            overall_emotions[dominant] = {'confidence_sum': confidence, 'count': 1}
+                # Aggregate emotions for the video
+                if result['video']:
+                    for video_result in result['video']:
+                        if 'dominant_emotion' in video_result:
+                            dominant = video_result['dominant_emotion']['name']
+                            confidence = video_result['dominant_emotion']['confidence']
+                            if dominant in overall_emotions:
+                                overall_emotions[dominant]['confidence_sum'] += confidence
+                                overall_emotions[dominant]['count'] += 1
+                            else:
+                                overall_emotions[dominant] = {'confidence_sum': confidence, 'count': 1}
+
+            frame_count += 1
         
         cap.release()
 
@@ -1266,7 +1267,7 @@ def upload_video():
         analyzer.store_emotion_data(
             user_id=current_user.id,
             emotion_data=emotion_data,
-            file=video_data,  # Store the video as binary
+            file=open(upload_path, 'rb').read(),  # Store the video as binary
             file_type="video"
         )
 
@@ -1278,6 +1279,7 @@ def upload_video():
         }), 200
     else:
         return jsonify({"error": "No video file provided"}), 400
+
 
 
 @analysis.route('/analyze_audio_file', methods=['POST'])
