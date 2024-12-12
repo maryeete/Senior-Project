@@ -597,7 +597,7 @@ def load_and_prepare_model():
     y_rating = df['sentiment_id']
     X_train, X_test, y_train, y_test = train_test_split(X, y_rating, test_size=0.2, random_state=42)
 
-    classifier_review = LogisticRegression(max_iter=1000)
+    classifier_review = LogisticRegression(max_iter=1000, class_weight='balanced')
     classifier_review.fit(X_train.iloc[:, :-1], y_train)
 
 # Predict sentiment for the provided text input
