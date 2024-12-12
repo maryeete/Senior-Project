@@ -37,23 +37,5 @@ window.onload = function () {
         }
     });
 
-    // Create emotion bar chart for other emotions
-    const emotionBarChart = new Chart(document.getElementById('emotionBarChart').getContext('2d'), {
-        type: 'bar',
-        data: {
-            labels: otherEmotionLabels,
-            datasets: [{
-                label: 'Other Emotions',
-                data: otherEmotionValues,
-                backgroundColor: '#FF5733',
-            }]
-        },
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
-        }
-    });
+
 }
