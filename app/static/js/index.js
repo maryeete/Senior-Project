@@ -177,28 +177,29 @@ async function toggleRecording() {
     
     if (!isRecording) {
         // Start Recording
+        document.getElementById('uploadingMessage').style.display = 'none';  // Hide 'Uploading...' message at start
         try {
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: true,
                 audio: true,
             });
-            console.log("a"); 
+            console.log("a");
             mediaRecorder = new MediaRecorder(stream);
             videoChunks = [];
-            console.log("b"); 
+            console.log("b");
             mediaRecorder.ondataavailable = (event) => {
                 if (event.data.size > 0) {
                     videoChunks.push(event.data);
                 }
             };
-            console.log("c"); 
+            console.log("c");
             mediaRecorder.start(1000);
-
+    
             // Start the timer
             recordingStartTime = Date.now();
             const timerDisplay = document.getElementById('recordingTimer');
             const recordingStatus = document.getElementById('recordingStatus');
-            
+    
             recordingStatus.style.display = 'block';
             recordingTimer = setInterval(() => {
                 const elapsed = Date.now() - recordingStartTime;
@@ -206,12 +207,12 @@ async function toggleRecording() {
                 const minutes = Math.floor((elapsed / 1000 / 60)).toString().padStart(2, '0');
                 timerDisplay.textContent = `${minutes}:${seconds}`;
             }, 1000);
-
+    
             // Update UI
             recordButton.textContent = 'Stop Recording';
             recordButton.classList.add('recording');
             isRecording = true;
-
+    
         } catch (error) {
             console.error('Detailed recording error:', error);
             alert('Error starting recording: ' + error.message);
@@ -220,31 +221,31 @@ async function toggleRecording() {
         // Stop Recording
         try {
             mediaRecorder.stop();
-            
+    
             // Stop the timer
             if (recordingTimer) {
                 clearInterval(recordingTimer);
                 recordingTimer = null;
             }
-            
+    
             // Hide recording status
             document.getElementById('recordingStatus').style.display = 'none';
-
+    
             // Process the recording
             await new Promise(resolve => {
                 mediaRecorder.onstop = async () => {
-                    const videoBlob = new Blob(videoChunks, { type: 'video/mp4' });
+                    const videoBlob = new Blob(videoChunks, { type: 'video/webm' });
                     const formData = new FormData();
-                    formData.append('video', videoBlob, 'recorded_video.mp4');
-                    
-                    document.getElementById('uploadingMessage').style.display = 'block';
-
+                    formData.append('video', videoBlob, 'recorded_video.webm');
+    
+                    document.getElementById('uploadingMessage').style.display = 'block';  // Show 'Uploading...' message
+    
                     try {
                         const response = await fetch('/upload_video', {
                             method: 'POST',
                             body: formData
                         });
-
+    
                         const data = await response.json();
                         if (data.status === 'success') {
                             alert('Video uploaded successfully!');
@@ -258,26 +259,27 @@ async function toggleRecording() {
                         // Hide uploading message after the upload process finishes
                         document.getElementById('uploadingMessage').style.display = 'none';
                     }
-                    
+    
                     resolve();
                 };
             });
-
+    
             // Clean up
             mediaRecorder.stream.getTracks().forEach(track => track.stop());
             mediaRecorder = null;
             videoChunks = [];
-
+    
             // Update UI
             recordButton.textContent = 'Start Recording';
             recordButton.classList.remove('recording');
             isRecording = false;
-
+    
         } catch (error) {
             console.error('Error stopping recording:', error);
             alert('Error stopping recording.');
         }
     }
+    
 }
 
 
