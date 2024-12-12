@@ -89,7 +89,7 @@ function stopVideo() {
     videoFeed.src = '';
     videoFeed.style.display = 'none';
     
-    fetch('/stop_video', { method: 'POST' })
+    fetch('/stop_combined', { method: 'POST' })
         .catch(error => console.error('Error stopping video:', error));
 }
 
@@ -237,6 +237,8 @@ async function toggleRecording() {
                     const formData = new FormData();
                     formData.append('video', videoBlob, 'recorded_video.mp4');
                     
+                    document.getElementById('uploadingMessage').style.display = 'block';
+
                     try {
                         const response = await fetch('/upload_video', {
                             method: 'POST',
@@ -249,10 +251,12 @@ async function toggleRecording() {
                         } else {
                             alert('Error uploading video: ' + data.error);
                         }
-
                     } catch (error) {
                         console.error('Error uploading video:', error);
                         alert('Error uploading video');
+                    } finally {
+                        // Hide uploading message after the upload process finishes
+                        document.getElementById('uploadingMessage').style.display = 'none';
                     }
                     
                     resolve();
