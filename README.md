@@ -11,7 +11,7 @@ pip install -r requirements.txt
 
 Setup MySQL database instance: 
 ```
-cd database_files
+cd data
 ```
 
 ```
@@ -40,10 +40,4 @@ To execute (Mac/Linux):
 python3 main.py
 ```
 <br>
-
-## To-Do
-
-    - Frontend
-
-    - Video uploads very slowly
     
